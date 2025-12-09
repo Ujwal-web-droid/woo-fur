@@ -3,13 +3,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PawPrint, Heart, Filter } from "lucide-react";
 
+// Animal images
+import lunaImg from "@/assets/animals/luna-golden-retriever.jpg";
+import oliverImg from "@/assets/animals/oliver-tabby-cat.jpg";
+import daisyImg from "@/assets/animals/daisy-rabbit.jpg";
+import maxImg from "@/assets/animals/max-border-collie.jpg";
+import whiskersImg from "@/assets/animals/whiskers-persian-cat.jpg";
+import cocoImg from "@/assets/animals/coco-mini-poodle.jpg";
+
 const animals = [
-  { name: "Luna", species: "Golden Retriever", age: "4 years", status: "Therapy Certified", emoji: "🐕" },
-  { name: "Oliver", species: "Tabby Cat", age: "2 years", status: "Available for Adoption", emoji: "🐈" },
-  { name: "Daisy", species: "Holland Lop Rabbit", age: "1 year", status: "Part-time Pet", emoji: "🐰" },
-  { name: "Max", species: "Border Collie", age: "3 years", status: "Therapy Certified", emoji: "🐕" },
-  { name: "Whiskers", species: "Persian Cat", age: "5 years", status: "Available for Adoption", emoji: "🐱" },
-  { name: "Coco", species: "Mini Poodle", age: "2 years", status: "In Rehabilitation", emoji: "🐩" },
+  { name: "Luna", species: "Golden Retriever", age: "4 years", status: "Therapy Certified", image: lunaImg },
+  { name: "Oliver", species: "Tabby Cat", age: "2 years", status: "Available for Adoption", image: oliverImg },
+  { name: "Daisy", species: "Holland Lop Rabbit", age: "1 year", status: "Part-time Pet", image: daisyImg },
+  { name: "Max", species: "Border Collie", age: "3 years", status: "Therapy Certified", image: maxImg },
+  { name: "Whiskers", species: "Persian Cat", age: "5 years", status: "Available for Adoption", image: whiskersImg },
+  { name: "Coco", species: "Mini Poodle", age: "2 years", status: "In Rehabilitation", image: cocoImg },
 ];
 
 const Animals = () => {
@@ -45,8 +53,12 @@ const Animals = () => {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {animals.map((animal) => (
               <Card key={animal.name} className="overflow-hidden card-hover group">
-                <div className="aspect-square bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center relative">
-                  <span className="text-8xl group-hover:scale-110 transition-transform">{animal.emoji}</span>
+                <div className="aspect-square overflow-hidden relative">
+                  <img 
+                    src={animal.image} 
+                    alt={animal.name}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
                   <button className="absolute top-4 right-4 p-2 rounded-full bg-background/80 hover:bg-background transition-colors">
                     <Heart className="h-5 w-5 text-muted-foreground hover:text-accent" />
                   </button>
