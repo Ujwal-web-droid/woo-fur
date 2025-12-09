@@ -3,6 +3,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Heart, ArrowRight } from "lucide-react";
 
+// Animal images
+import lunaImg from "@/assets/animals/luna-golden-retriever.jpg";
+import oliverImg from "@/assets/animals/oliver-tabby-cat.jpg";
+import maxImg from "@/assets/animals/max-border-collie.jpg";
+
 const stories = [
   {
     title: "How Luna Changed Sarah's Life Forever",
@@ -10,7 +15,7 @@ const stories = [
     author: "Sarah Mitchell",
     date: "December 2024",
     category: "Therapy Success",
-    emoji: "🐕",
+    image: lunaImg,
   },
   {
     title: "From Shelter to Sanctuary",
@@ -18,7 +23,7 @@ const stories = [
     author: "Woo-Fur Team",
     date: "November 2024",
     category: "Rescue Story",
-    emoji: "🐈",
+    image: oliverImg,
   },
   {
     title: "A Second Chance at Happiness",
@@ -26,7 +31,7 @@ const stories = [
     author: "Dr. Emily Chen",
     date: "October 2024",
     category: "Rehabilitation",
-    emoji: "🐕",
+    image: maxImg,
   },
 ];
 
@@ -55,8 +60,12 @@ const Stories = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {stories.map((story) => (
               <Card key={story.title} className="overflow-hidden card-hover group">
-                <div className="aspect-video bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
-                  <span className="text-6xl group-hover:scale-110 transition-transform">{story.emoji}</span>
+                <div className="aspect-video overflow-hidden">
+                  <img 
+                    src={story.image} 
+                    alt={story.title}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
                 </div>
                 <CardContent className="p-6">
                   <span className="inline-block text-xs px-2 py-1 rounded-full bg-accent/10 text-accent mb-3">

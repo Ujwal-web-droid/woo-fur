@@ -14,6 +14,11 @@ import {
   ChevronRight
 } from "lucide-react";
 
+// Animal images
+import lunaImg from "@/assets/animals/luna-golden-retriever.jpg";
+import oliverImg from "@/assets/animals/oliver-tabby-cat.jpg";
+import daisyImg from "@/assets/animals/daisy-rabbit.jpg";
+
 const programs = [
   {
     icon: Heart,
@@ -49,9 +54,9 @@ const stats = [
 ];
 
 const featuredAnimals = [
-  { name: "Luna", species: "Golden Retriever", status: "Therapy Certified", image: "🐕" },
-  { name: "Oliver", species: "Tabby Cat", status: "Available for Adoption", image: "🐈" },
-  { name: "Daisy", species: "Rabbit", status: "Part-time Pet", image: "🐰" },
+  { name: "Luna", species: "Golden Retriever", status: "Therapy Certified", image: lunaImg },
+  { name: "Oliver", species: "Tabby Cat", status: "Available for Adoption", image: oliverImg },
+  { name: "Daisy", species: "Rabbit", status: "Part-time Pet", image: daisyImg },
 ];
 
 const Index = () => {
@@ -98,11 +103,17 @@ const Index = () => {
             {featuredAnimals.map((animal, index) => (
               <Card 
                 key={animal.name}
-                className="min-w-[200px] md:min-w-[220px] card-hover animate-slide-up"
+                className="min-w-[200px] md:min-w-[220px] card-hover animate-slide-up overflow-hidden"
                 style={{ animationDelay: `${0.3 + index * 0.1}s` }}
               >
-                <CardContent className="p-6 text-center">
-                  <div className="text-5xl mb-3">{animal.image}</div>
+                <div className="aspect-square overflow-hidden">
+                  <img 
+                    src={animal.image} 
+                    alt={animal.name}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  />
+                </div>
+                <CardContent className="p-4 text-center">
                   <h3 className="font-heading font-semibold text-lg">{animal.name}</h3>
                   <p className="text-sm text-muted-foreground">{animal.species}</p>
                   <span className="inline-block mt-2 text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
@@ -208,8 +219,12 @@ const Index = () => {
             </div>
             
             <div className="relative">
-              <div className="aspect-square rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center text-9xl">
-                🐕
+              <div className="aspect-square rounded-2xl overflow-hidden shadow-elevated">
+                <img 
+                  src={lunaImg} 
+                  alt="Luna the therapy dog"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div className="absolute -bottom-4 -right-4 bg-card rounded-xl p-4 shadow-elevated">
                 <div className="flex items-center gap-2">
