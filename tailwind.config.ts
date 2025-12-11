@@ -61,22 +61,27 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Woo-Fur custom colors
-        sage: {
-          DEFAULT: "hsl(var(--sage))",
-          light: "hsl(var(--sage-light))",
-          dark: "hsl(var(--sage-dark))",
+        // Woo-Fur custom colors - Dusky Mauve Brown Theme
+        mauve: {
+          DEFAULT: "hsl(var(--mauve))",
+          light: "hsl(var(--mauve-light))",
+          dark: "hsl(var(--mauve-dark))",
         },
-        cream: {
-          DEFAULT: "hsl(var(--cream))",
-          dark: "hsl(var(--cream-dark))",
+        beige: {
+          DEFAULT: "hsl(var(--beige))",
+          dark: "hsl(var(--beige-dark))",
         },
-        amber: {
-          DEFAULT: "hsl(var(--amber))",
-          light: "hsl(var(--amber-light))",
-          dark: "hsl(var(--amber-dark))",
+        sand: {
+          DEFAULT: "hsl(var(--sand))",
+          light: "hsl(var(--sand-light))",
+          dark: "hsl(var(--sand-dark))",
         },
-        earth: "hsl(var(--earth))",
+        cocoa: {
+          DEFAULT: "hsl(var(--cocoa))",
+          light: "hsl(var(--cocoa-light))",
+          dark: "hsl(var(--cocoa-dark))",
+        },
+        "muted-brown": "hsl(var(--muted-brown))",
         "warm-white": "hsl(var(--warm-white))",
       },
       borderRadius: {
