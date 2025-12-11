@@ -3,12 +3,25 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BookingProvider } from "@/context/BookingContext";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Animals from "./pages/Animals";
+import AnimalProfile from "./pages/AnimalProfile";
 import Programs from "./pages/Programs";
+import RescueProgram from "./pages/programs/RescueProgram";
+import RehabilitationProgram from "./pages/programs/RehabilitationProgram";
+import TherapyProgram from "./pages/programs/TherapyProgram";
+import PartTimePetsProgram from "./pages/programs/PartTimePetsProgram";
 import Stories from "./pages/Stories";
+import StoryDetail from "./pages/StoryDetail";
+import StorySubmit from "./pages/StorySubmit";
+import Booking from "./pages/Booking";
+import BookingConfirmation from "./pages/BookingConfirmation";
+import Support from "./pages/Support";
+import Volunteer from "./pages/Volunteer";
+import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -16,20 +29,33 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/animals" element={<Animals />} />
-          <Route path="/programs" element={<Programs />} />
-          <Route path="/stories" element={<Stories />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <BookingProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/animals" element={<Animals />} />
+            <Route path="/animals/:id" element={<AnimalProfile />} />
+            <Route path="/programs" element={<Programs />} />
+            <Route path="/programs/rescue" element={<RescueProgram />} />
+            <Route path="/programs/rehabilitation" element={<RehabilitationProgram />} />
+            <Route path="/programs/therapy" element={<TherapyProgram />} />
+            <Route path="/programs/part-time-pets" element={<PartTimePetsProgram />} />
+            <Route path="/stories" element={<Stories />} />
+            <Route path="/stories/submit" element={<StorySubmit />} />
+            <Route path="/stories/:id" element={<StoryDetail />} />
+            <Route path="/booking" element={<Booking />} />
+            <Route path="/booking/confirmation" element={<BookingConfirmation />} />
+            <Route path="/support" element={<Support />} />
+            <Route path="/volunteer" element={<Volunteer />} />
+            <Route path="/faq" element={<FAQ />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </BookingProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
