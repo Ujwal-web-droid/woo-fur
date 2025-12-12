@@ -4,6 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { BookingProvider } from "@/context/BookingContext";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { OfflineBanner } from "@/components/pwa/OfflineBanner";
+import { UpdatePrompt } from "@/components/pwa/UpdatePrompt";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -22,6 +25,7 @@ import BookingConfirmation from "./pages/BookingConfirmation";
 import Support from "./pages/Support";
 import Volunteer from "./pages/Volunteer";
 import FAQ from "./pages/FAQ";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +36,9 @@ const App = () => (
       <BookingProvider>
         <Toaster />
         <Sonner />
+        <OfflineBanner />
+        <UpdatePrompt />
+        <InstallPrompt />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
@@ -52,6 +59,7 @@ const App = () => (
             <Route path="/support" element={<Support />} />
             <Route path="/volunteer" element={<Volunteer />} />
             <Route path="/faq" element={<FAQ />} />
+            <Route path="/install" element={<Install />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
