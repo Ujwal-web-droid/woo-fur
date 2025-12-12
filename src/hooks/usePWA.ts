@@ -5,48 +5,62 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+// Global deferred prompt variable
+let deferredPrompt: BeforeInstallPromptEvent | null = null;
+
+const STORAGE_KEYS = {
+  CAN_INSTALL: "pwa_can_install",
+  INSTALLED: "pwa_installed",
+  DISMISSED: "pwa_install_dismissed",
+};
+
 interface PWAState {
   isInstallable: boolean;
   isInstalled: boolean;
   isOnline: boolean;
   isUpdateAvailable: boolean;
-  installPrompt: BeforeInstallPromptEvent | null;
 }
 
 export const usePWA = () => {
   const [state, setState] = useState<PWAState>({
-    isInstallable: false,
-    isInstalled: false,
+    isInstallable: localStorage.getItem(STORAGE_KEYS.CAN_INSTALL) === "yes",
+    isInstalled: localStorage.getItem(STORAGE_KEYS.INSTALLED) === "yes",
     isOnline: navigator.onLine,
     isUpdateAvailable: false,
-    installPrompt: null,
   });
 
   useEffect(() => {
-    // Check if already installed
+    // Check if already installed via display mode
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as any).standalone === true;
     
-    setState((prev) => ({ ...prev, isInstalled: isStandalone }));
+    if (isStandalone) {
+      localStorage.setItem(STORAGE_KEYS.INSTALLED, "yes");
+      localStorage.setItem(STORAGE_KEYS.CAN_INSTALL, "no");
+      setState((prev) => ({ ...prev, isInstalled: true, isInstallable: false }));
+    }
 
     // Listen for install prompt
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
+      deferredPrompt = e as BeforeInstallPromptEvent;
+      localStorage.setItem(STORAGE_KEYS.CAN_INSTALL, "yes");
       setState((prev) => ({
         ...prev,
         isInstallable: true,
-        installPrompt: e as BeforeInstallPromptEvent,
       }));
     };
 
     // Listen for app installed
     const handleAppInstalled = () => {
+      deferredPrompt = null;
+      localStorage.setItem(STORAGE_KEYS.INSTALLED, "yes");
+      localStorage.setItem(STORAGE_KEYS.CAN_INSTALL, "no");
       setState((prev) => ({
         ...prev,
         isInstalled: true,
         isInstallable: false,
-        installPrompt: null,
       }));
     };
 
@@ -73,17 +87,20 @@ export const usePWA = () => {
   }, []);
 
   const promptInstall = useCallback(async () => {
-    if (!state.installPrompt) return false;
+    if (!deferredPrompt) return false;
 
     try {
-      await state.installPrompt.prompt();
-      const { outcome } = await state.installPrompt.userChoice;
+      await deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
       
       if (outcome === "accepted") {
+        deferredPrompt = null;
+        localStorage.setItem(STORAGE_KEYS.INSTALLED, "yes");
+        localStorage.setItem(STORAGE_KEYS.CAN_INSTALL, "no");
         setState((prev) => ({
           ...prev,
           isInstallable: false,
-          installPrompt: null,
+          isInstalled: true,
         }));
         return true;
       }
@@ -92,20 +109,18 @@ export const usePWA = () => {
       console.error("Error prompting install:", error);
       return false;
     }
-  }, [state.installPrompt]);
+  }, []);
 
   const dismissInstallPrompt = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      isInstallable: false,
-      installPrompt: null,
-    }));
-    localStorage.setItem("pwa-install-dismissed", "true");
+    localStorage.setItem(STORAGE_KEYS.DISMISSED, "true");
   }, []);
+
+  const isDismissed = localStorage.getItem(STORAGE_KEYS.DISMISSED) === "true";
 
   return {
     ...state,
     promptInstall,
     dismissInstallPrompt,
+    isDismissed,
   };
 };
