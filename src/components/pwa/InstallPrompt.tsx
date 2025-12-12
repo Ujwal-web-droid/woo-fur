@@ -1,15 +1,44 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Download, X, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { usePWA } from "@/hooks/usePWA";
 
 export const InstallPrompt: React.FC = () => {
-  const { isInstallable, isInstalled, promptInstall, dismissInstallPrompt } = usePWA();
+  const { isInstallable, isInstalled, promptInstall, dismissInstallPrompt, isDismissed } = usePWA();
+  const [showPopup, setShowPopup] = useState(false);
 
-  // Don't show if already installed, not installable, or previously dismissed
-  if (isInstalled || !isInstallable) return null;
-  if (localStorage.getItem("pwa-install-dismissed") === "true") return null;
+  useEffect(() => {
+    // Don't show if already installed or dismissed
+    if (isInstalled || isDismissed || !isInstallable) {
+      setShowPopup(false);
+      return;
+    }
+
+    // Show popup every 5 seconds
+    const interval = setInterval(() => {
+      if (!isInstalled && isInstallable && !isDismissed) {
+        setShowPopup(true);
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [isInstalled, isInstallable, isDismissed]);
+
+  const handleDismiss = () => {
+    setShowPopup(false);
+    dismissInstallPrompt();
+  };
+
+  const handleInstall = async () => {
+    const success = await promptInstall();
+    if (success) {
+      setShowPopup(false);
+    }
+  };
+
+  // Don't render if already installed, dismissed, or popup not visible
+  if (isInstalled || !showPopup) return null;
 
   return (
     <Card className="fixed bottom-20 left-4 right-4 md:left-auto md:right-4 md:w-80 z-50 shadow-lg border-primary/20 animate-fade-in bg-card">
@@ -25,7 +54,7 @@ export const InstallPrompt: React.FC = () => {
             </p>
           </div>
           <button
-            onClick={dismissInstallPrompt}
+            onClick={handleDismiss}
             className="text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Dismiss"
           >
@@ -37,14 +66,14 @@ export const InstallPrompt: React.FC = () => {
             variant="outline"
             size="sm"
             className="flex-1"
-            onClick={dismissInstallPrompt}
+            onClick={handleDismiss}
           >
             Not now
           </Button>
           <Button
             size="sm"
             className="flex-1 gap-1"
-            onClick={promptInstall}
+            onClick={handleInstall}
           >
             <Download className="h-4 w-4" />
             Install
