@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { BookingProvider } from "@/context/BookingContext";
+import { AuthProvider } from "@/context/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { OfflineBanner } from "@/components/pwa/OfflineBanner";
 import { UpdatePrompt } from "@/components/pwa/UpdatePrompt";
@@ -26,6 +28,8 @@ import Support from "./pages/Support";
 import Volunteer from "./pages/Volunteer";
 import FAQ from "./pages/FAQ";
 import Install from "./pages/Install";
+import Auth from "./pages/Auth";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,37 +37,48 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <BookingProvider>
-        <Toaster />
-        <Sonner />
-        <OfflineBanner />
-        <UpdatePrompt />
-        <InstallPrompt />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/animals" element={<Animals />} />
-            <Route path="/animals/:id" element={<AnimalProfile />} />
-            <Route path="/programs" element={<Programs />} />
-            <Route path="/programs/rescue" element={<RescueProgram />} />
-            <Route path="/programs/rehabilitation" element={<RehabilitationProgram />} />
-            <Route path="/programs/therapy" element={<TherapyProgram />} />
-            <Route path="/programs/part-time-pets" element={<PartTimePetsProgram />} />
-            <Route path="/stories" element={<Stories />} />
-            <Route path="/stories/submit" element={<StorySubmit />} />
-            <Route path="/stories/:id" element={<StoryDetail />} />
-            <Route path="/booking" element={<Booking />} />
-            <Route path="/booking/confirmation" element={<BookingConfirmation />} />
-            <Route path="/support" element={<Support />} />
-            <Route path="/volunteer" element={<Volunteer />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/install" element={<Install />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </BookingProvider>
+      <AuthProvider>
+        <BookingProvider>
+          <Toaster />
+          <Sonner />
+          <OfflineBanner />
+          <UpdatePrompt />
+          <InstallPrompt />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/animals" element={<Animals />} />
+              <Route path="/animals/:id" element={<AnimalProfile />} />
+              <Route path="/programs" element={<Programs />} />
+              <Route path="/programs/rescue" element={<RescueProgram />} />
+              <Route path="/programs/rehabilitation" element={<RehabilitationProgram />} />
+              <Route path="/programs/therapy" element={<TherapyProgram />} />
+              <Route path="/programs/part-time-pets" element={<PartTimePetsProgram />} />
+              <Route path="/stories" element={<Stories />} />
+              <Route path="/stories/submit" element={<StorySubmit />} />
+              <Route path="/stories/:id" element={<StoryDetail />} />
+              <Route path="/booking" element={<Booking />} />
+              <Route path="/booking/confirmation" element={<BookingConfirmation />} />
+              <Route path="/support" element={<Support />} />
+              <Route path="/volunteer" element={<Volunteer />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route path="/install" element={<Install />} />
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </BookingProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
