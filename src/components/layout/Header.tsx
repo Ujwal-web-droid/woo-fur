@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Heart, PawPrint } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { UserMenu } from "@/components/auth/UserMenu";
 
 const navLinks = [
   { name: "Home", path: "/" },
@@ -49,13 +50,18 @@ export const Header = () => {
             ))}
           </nav>
 
-          {/* CTA Button */}
+          {/* CTA Buttons & User Menu */}
           <div className="hidden md:flex items-center gap-3">
-            <Button variant="outline" size="sm" className="gap-2">
-              <Heart className="h-4 w-4" />
-              Donate
-            </Button>
-            <Button size="sm">Book a Visit</Button>
+            <Link to="/support">
+              <Button variant="outline" size="sm" className="gap-2">
+                <Heart className="h-4 w-4" />
+                Donate
+              </Button>
+            </Link>
+            <Link to="/booking">
+              <Button size="sm">Book a Visit</Button>
+            </Link>
+            <UserMenu />
           </div>
 
           {/* Mobile Menu Button */}
@@ -92,12 +98,19 @@ export const Header = () => {
                 {link.name}
               </Link>
             ))}
-            <div className="flex gap-3 mt-4 pt-4 border-t border-border">
-              <Button variant="outline" className="flex-1 gap-2">
-                <Heart className="h-4 w-4" />
-                Donate
-              </Button>
-              <Button className="flex-1">Book a Visit</Button>
+            <div className="flex items-center gap-3 mt-4 pt-4 border-t border-border">
+              <Link to="/support" className="flex-1">
+                <Button variant="outline" className="w-full gap-2">
+                  <Heart className="h-4 w-4" />
+                  Donate
+                </Button>
+              </Link>
+              <Link to="/booking" className="flex-1">
+                <Button className="w-full">Book a Visit</Button>
+              </Link>
+            </div>
+            <div className="flex justify-center mt-4">
+              <UserMenu />
             </div>
           </nav>
         </div>
