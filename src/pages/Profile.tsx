@@ -11,16 +11,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/hooks/useFavorites';
 import { animals } from '@/data/mockData';
 import { 
-  User, Mail, Phone, Bell, Shield, Heart, 
-  Calendar, LogOut, Trash2, Settings, MapPin
+  User, Mail, Phone, Bell, Heart, 
+  Calendar, LogOut, Trash2, Settings
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -135,12 +135,7 @@ export default function Profile() {
           <Card className="mb-6">
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-                <Avatar className="h-20 w-20">
-                  <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || 'User'} />
-                  <AvatarFallback className="bg-primary/10 text-primary text-xl">
-                    {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
-                  </AvatarFallback>
-                </Avatar>
+                <AvatarUpload />
                 
                 <div className="flex-1 space-y-2">
                   <h1 className="text-2xl font-bold text-foreground">
