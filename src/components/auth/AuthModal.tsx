@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/context/AuthContext';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Mail, Lock, User, Sparkles } from 'lucide-react';
+import { Mail, Lock, User, Sparkles, ArrowLeft, CheckCircle } from 'lucide-react';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -30,9 +30,16 @@ const magicLinkSchema = z.object({
   email: z.string().email('Please enter a valid email'),
 });
 
+const resetPasswordSchema = z.object({
+  email: z.string().email('Please enter a valid email'),
+});
+
 type LoginFormData = z.infer<typeof loginSchema>;
 type SignupFormData = z.infer<typeof signupSchema>;
 type MagicLinkFormData = z.infer<typeof magicLinkSchema>;
+type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+
+type ViewState = 'auth' | 'magic-link' | 'forgot-password';
 
 interface AuthModalProps {
   open: boolean;
@@ -42,10 +49,11 @@ interface AuthModalProps {
 
 export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModalProps) {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>(defaultTab);
-  const [showMagicLink, setShowMagicLink] = useState(false);
+  const [viewState, setViewState] = useState<ViewState>('auth');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { signIn, signUp, signInWithMagicLink, signInWithGoogle } = useAuth();
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const { signIn, signUp, signInWithMagicLink, signInWithGoogle, resetPassword } = useAuth();
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -59,6 +67,11 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
 
   const magicLinkForm = useForm<MagicLinkFormData>({
     resolver: zodResolver(magicLinkSchema),
+    defaultValues: { email: '' },
+  });
+
+  const resetForm = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordSchema),
     defaultValues: { email: '' },
   });
 
@@ -109,8 +122,25 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
     if (error) {
       setError(error.message);
     } else {
-      setShowMagicLink(false);
+      setSuccessMessage('Check your email for the magic link!');
       magicLinkForm.reset();
+    }
+    
+    setIsLoading(false);
+  };
+
+  const handleResetPassword = async (data: ResetPasswordFormData) => {
+    setIsLoading(true);
+    setError(null);
+    setSuccessMessage(null);
+    
+    const { error } = await resetPassword(data.email);
+    
+    if (error) {
+      setError(error.message);
+    } else {
+      setSuccessMessage('Check your email for a password reset link.');
+      resetForm.reset();
     }
     
     setIsLoading(false);
@@ -129,54 +159,146 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
     setIsLoading(false);
   };
 
+  const handleBackToAuth = () => {
+    setViewState('auth');
+    setError(null);
+    setSuccessMessage(null);
+  };
+
+  const getTitle = () => {
+    switch (viewState) {
+      case 'magic-link':
+        return 'Sign in with Magic Link';
+      case 'forgot-password':
+        return 'Reset Password';
+      default:
+        return 'Welcome to Woo-Fur';
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px] bg-card">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center text-foreground">
-            {showMagicLink ? 'Sign in with Magic Link' : 'Welcome to Woo-Fur'}
+            {getTitle()}
           </DialogTitle>
         </DialogHeader>
 
-        {showMagicLink ? (
+        {/* Magic Link View */}
+        {viewState === 'magic-link' && (
           <form onSubmit={magicLinkForm.handleSubmit(handleMagicLink)} className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="magic-email" className="text-foreground">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="magic-email"
-                  type="email"
-                  placeholder="you@example.com"
-                  className="pl-10"
-                  {...magicLinkForm.register('email')}
-                />
+            {successMessage ? (
+              <div className="text-center py-4">
+                <CheckCircle className="h-12 w-12 text-primary mx-auto mb-4" />
+                <p className="text-foreground font-medium">{successMessage}</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Click the link in your email to sign in.
+                </p>
               </div>
-              {magicLinkForm.formState.errors.email && (
-                <p className="text-sm text-destructive">{magicLinkForm.formState.errors.email.message}</p>
-              )}
-            </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="magic-email" className="text-foreground">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="magic-email"
+                      type="email"
+                      placeholder="you@example.com"
+                      className="pl-10"
+                      {...magicLinkForm.register('email')}
+                    />
+                  </div>
+                  {magicLinkForm.formState.errors.email && (
+                    <p className="text-sm text-destructive">{magicLinkForm.formState.errors.email.message}</p>
+                  )}
+                </div>
 
-            {error && (
-              <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-                {error}
-              </div>
+                {error && (
+                  <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? <LoadingSpinner size="sm" /> : 'Send Magic Link'}
+                </Button>
+              </>
             )}
-
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? <LoadingSpinner size="sm" /> : 'Send Magic Link'}
-            </Button>
 
             <Button
               type="button"
               variant="ghost"
               className="w-full"
-              onClick={() => setShowMagicLink(false)}
+              onClick={handleBackToAuth}
             >
+              <ArrowLeft className="h-4 w-4 mr-2" />
               Back to login
             </Button>
           </form>
-        ) : (
+        )}
+
+        {/* Forgot Password View */}
+        {viewState === 'forgot-password' && (
+          <form onSubmit={resetForm.handleSubmit(handleResetPassword)} className="space-y-4 pt-4">
+            {successMessage ? (
+              <div className="text-center py-4">
+                <CheckCircle className="h-12 w-12 text-primary mx-auto mb-4" />
+                <p className="text-foreground font-medium">{successMessage}</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Click the link in your email to reset your password.
+                </p>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  Enter your email address and we'll send you a link to reset your password.
+                </p>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email" className="text-foreground">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      placeholder="you@example.com"
+                      className="pl-10"
+                      {...resetForm.register('email')}
+                    />
+                  </div>
+                  {resetForm.formState.errors.email && (
+                    <p className="text-sm text-destructive">{resetForm.formState.errors.email.message}</p>
+                  )}
+                </div>
+
+                {error && (
+                  <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? <LoadingSpinner size="sm" /> : 'Send Reset Link'}
+                </Button>
+              </>
+            )}
+
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              onClick={handleBackToAuth}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to login
+            </Button>
+          </form>
+        )}
+
+        {/* Main Auth View */}
+        {viewState === 'auth' && (
           <>
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'login' | 'signup')}>
               <TabsList className="grid w-full grid-cols-2">
@@ -204,7 +326,20 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="login-password" className="text-foreground">Password</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="login-password" className="text-foreground">Password</Label>
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="px-0 h-auto text-xs text-muted-foreground hover:text-primary"
+                        onClick={() => {
+                          setViewState('forgot-password');
+                          setError(null);
+                        }}
+                      >
+                        Forgot password?
+                      </Button>
+                    </div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -356,7 +491,11 @@ export function AuthModal({ open, onOpenChange, defaultTab = 'login' }: AuthModa
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setShowMagicLink(true)}
+                onClick={() => {
+                  setViewState('magic-link');
+                  setError(null);
+                  setSuccessMessage(null);
+                }}
                 disabled={isLoading}
                 className="w-full"
               >
