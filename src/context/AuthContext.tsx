@@ -41,6 +41,8 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signInWithMagicLink: (email: string) => Promise<{ error: Error | null }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
+  resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: Error | null }>;
   hasRole: (role: AppRole) => boolean;
@@ -246,6 +248,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+
+      if (error) {
+        return { error };
+      }
+
+      toast({
+        title: "Check your email",
+        description: "We've sent you a password reset link.",
+      });
+
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) {
+        return { error };
+      }
+
+      toast({
+        title: "Password updated",
+        description: "Your password has been changed successfully.",
+      });
+
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -301,6 +345,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signIn,
     signInWithMagicLink,
     signInWithGoogle,
+    resetPassword,
+    updatePassword,
     signOut,
     updateProfile,
     hasRole,
