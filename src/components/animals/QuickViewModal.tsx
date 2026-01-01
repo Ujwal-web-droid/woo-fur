@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Animal } from "@/data/mockData";
+import { Animal } from "@/types/database";
 import { Link } from "react-router-dom";
 import { Heart, Calendar, Award, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
