@@ -1,14 +1,18 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { PawPrint } from "lucide-react";
-import { animals, Animal } from "@/data/mockData";
 import { AnimalCard } from "@/components/animals/AnimalCard";
 import { AnimalFilters, AnimalFiltersSidebar } from "@/components/animals/AnimalFilters";
 import { QuickViewModal } from "@/components/animals/QuickViewModal";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useAnimals, useAnimalsRealtime } from "@/hooks/useAnimals";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { Animal } from "@/types/database";
 
 const Animals = () => {
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { data: animals = [], isLoading, error } = useAnimals();
+  const { subscribeToAnimals } = useAnimalsRealtime();
   const [quickViewAnimal, setQuickViewAnimal] = useState<Animal | null>(null);
   const [filters, setFilters] = useState({
     search: "",
@@ -17,6 +21,12 @@ const Animals = () => {
     status: [] as string[],
     sortBy: "name",
   });
+
+  // Subscribe to real-time updates
+  useEffect(() => {
+    const unsubscribe = subscribeToAnimals();
+    return () => unsubscribe();
+  }, []);
 
   const filteredAnimals = useMemo(() => {
     let result = [...animals];
@@ -64,7 +74,7 @@ const Animals = () => {
     }
 
     return result;
-  }, [filters]);
+  }, [filters, animals]);
 
   return (
     <Layout>
@@ -111,14 +121,38 @@ const Animals = () => {
                 {filteredAnimals.length} animal{filteredAnimals.length !== 1 ? "s" : ""} found
               </p>
 
+              {/* Loading State */}
+              {isLoading && (
+                <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="space-y-4">
+                      <Skeleton className="aspect-[4/3] w-full rounded-lg" />
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Error State */}
+              {error && (
+                <div className="text-center py-12">
+                  <PawPrint className="h-12 w-12 text-destructive mx-auto mb-4" />
+                  <h3 className="font-heading text-xl font-semibold mb-2">Something went wrong</h3>
+                  <p className="text-muted-foreground">Unable to load animals. Please try again later.</p>
+                </div>
+              )}
+
               {/* Animals Grid */}
-              {filteredAnimals.length === 0 ? (
+              {!isLoading && !error && filteredAnimals.length === 0 && (
                 <div className="text-center py-12">
                   <PawPrint className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="font-heading text-xl font-semibold mb-2">No animals found</h3>
                   <p className="text-muted-foreground">Try adjusting your filters or search terms.</p>
                 </div>
-              ) : (
+              )}
+
+              {!isLoading && !error && filteredAnimals.length > 0 && (
                 <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
                   {filteredAnimals.map((animal) => (
                     <AnimalCard

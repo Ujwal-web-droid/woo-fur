@@ -1,26 +1,41 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   BookOpen, Heart, ArrowRight, Search, Filter, 
   PenSquare, Sparkles, ChevronLeft, ChevronRight 
 } from "lucide-react";
-import { stories } from "@/data/mockData";
+import { useStories, useFeaturedStories, useStoryLike, useStoriesRealtime } from "@/hooks/useStories";
+import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 
-const categories = ["All", "Therapy Success", "Rescue Story", "Rehabilitation", "Community", "Volunteer"];
+const categories = ["All", "healing", "transformation", "community", "youth"];
 
 const STORIES_PER_PAGE = 6;
 
 const Stories = () => {
+  const { user } = useAuth();
+  const { data: stories = [], isLoading } = useStories();
+  const { data: featuredStories = [] } = useFeaturedStories();
+  const { likedStories, toggleLike } = useStoryLike();
+  const { subscribeToStories } = useStoriesRealtime();
+  
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
-  const [likedStories, setLikedStories] = useState<Set<string>>(new Set());
+  const [localLikes, setLocalLikes] = useState<Set<string>>(new Set());
+  const [featuredIndex, setFeaturedIndex] = useState(0);
+
+  // Subscribe to real-time updates
+  useEffect(() => {
+    const unsubscribe = subscribeToStories();
+    return () => unsubscribe();
+  }, []);
 
   const filteredStories = useMemo(() => {
     return stories.filter(story => {
@@ -30,14 +45,12 @@ const Stories = () => {
         story.author.toLowerCase().includes(searchQuery.toLowerCase());
       
       const matchesCategory = 
-        selectedCategory === "All" || story.category === selectedCategory;
+        selectedCategory === "All" || story.category.toLowerCase() === selectedCategory.toLowerCase();
       
       return matchesSearch && matchesCategory;
     });
-  }, [searchQuery, selectedCategory]);
+  }, [searchQuery, selectedCategory, stories]);
 
-  const featuredStories = stories.filter(s => s.featured);
-  const [featuredIndex, setFeaturedIndex] = useState(0);
   const currentFeatured = featuredStories[featuredIndex];
 
   const totalPages = Math.ceil(filteredStories.length / STORIES_PER_PAGE);
@@ -49,15 +62,25 @@ const Stories = () => {
   const handleLike = (storyId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setLikedStories(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(storyId)) {
-        newSet.delete(storyId);
-      } else {
-        newSet.add(storyId);
-      }
-      return newSet;
-    });
+    
+    if (user) {
+      toggleLike(storyId);
+    } else {
+      // Local-only likes for non-authenticated users
+      setLocalLikes(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(storyId)) {
+          newSet.delete(storyId);
+        } else {
+          newSet.add(storyId);
+        }
+        return newSet;
+      });
+    }
+  };
+
+  const isLiked = (storyId: string) => {
+    return likedStories.has(storyId) || localLikes.has(storyId);
   };
 
   const nextFeatured = () => {
@@ -99,7 +122,7 @@ const Stories = () => {
       </section>
 
       {/* Featured Story Carousel */}
-      {featuredStories.length > 0 && (
+      {featuredStories.length > 0 && currentFeatured && (
         <section className="py-12 bg-card border-y">
           <div className="container-app">
             <div className="flex items-center gap-2 mb-6">
@@ -194,7 +217,7 @@ const Stories = () => {
                     setSelectedCategory(category);
                     setCurrentPage(1);
                   }}
-                  className="flex-shrink-0"
+                  className="flex-shrink-0 capitalize"
                 >
                   {category}
                 </Button>
@@ -207,7 +230,20 @@ const Stories = () => {
       {/* Stories Grid */}
       <section className="section-padding bg-background">
         <div className="container-app">
-          {paginatedStories.length === 0 ? (
+          {/* Loading State */}
+          {isLoading && (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="space-y-4">
+                  <Skeleton className="aspect-video w-full rounded-lg" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-1/2" />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!isLoading && paginatedStories.length === 0 ? (
             <div className="text-center py-12">
               <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-heading text-xl font-semibold mb-2">No Stories Found</h3>
@@ -215,7 +251,7 @@ const Stories = () => {
                 Try adjusting your search or filter criteria.
               </p>
             </div>
-          ) : (
+          ) : !isLoading && (
             <>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {paginatedStories.map((story) => (
@@ -231,16 +267,16 @@ const Stories = () => {
                           onClick={(e) => handleLike(story.id, e)}
                           className={cn(
                             "absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all",
-                            likedStories.has(story.id)
+                            isLiked(story.id)
                               ? "bg-red-500 text-white"
                               : "bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-red-500"
                           )}
                         >
-                          <Heart className={cn("h-4 w-4", likedStories.has(story.id) && "fill-current")} />
+                          <Heart className={cn("h-4 w-4", isLiked(story.id) && "fill-current")} />
                         </button>
                       </div>
                       <CardContent className="p-6">
-                        <Badge variant="secondary" className="mb-3">
+                        <Badge variant="secondary" className="mb-3 capitalize">
                           {story.category}
                         </Badge>
                         <h3 className="font-heading font-semibold text-lg mb-2 line-clamp-2 group-hover:text-primary transition-colors">
@@ -255,7 +291,7 @@ const Stories = () => {
                           </p>
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
                             <Heart className="h-3 w-3" />
-                            <span>{story.likes + (likedStories.has(story.id) ? 1 : 0)}</span>
+                            <span>{story.likes + (isLiked(story.id) ? 1 : 0)}</span>
                           </div>
                         </div>
                       </CardContent>

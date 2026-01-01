@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, Eye } from "lucide-react";
-import { Animal } from "@/data/mockData";
+import { Animal } from "@/types/database";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
