@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useEmail } from "@/hooks/useEmail";
+import { MapTilerMap } from "@/components/maps/MapTilerMap";
 import {
   MapPin,
   Phone,
@@ -54,7 +56,9 @@ const socialLinks = [
 
 const Contact = () => {
   const { toast } = useToast();
+  const { sendContactForm } = useEmail();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mapApiKey, setMapApiKey] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -63,26 +67,42 @@ const Contact = () => {
     message: "",
   });
 
+  // Fetch MapTiler API key from environment
+  useEffect(() => {
+    // The API key is stored in Supabase secrets and accessed via edge function
+    // For now, we'll use a state that can be populated
+    const key = import.meta.env.VITE_MAPTILER_API_KEY;
+    if (key) setMapApiKey(key);
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      await sendContactForm(formData);
+      
+      toast({
+        title: "Message Sent!",
+        description: "We'll get back to you within 24-48 hours.",
+      });
 
-    toast({
-      title: "Message Sent!",
-      description: "We'll get back to you within 24-48 hours.",
-    });
-
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      reason: "",
-      message: "",
-    });
-    setIsSubmitting(false);
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        reason: "",
+        message: "",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (
@@ -348,17 +368,14 @@ const Contact = () => {
         </div>
       </section>
 
-      {/* Map Placeholder */}
-      <section className="h-[400px] bg-muted relative">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <MapPin className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-            <p className="text-muted-foreground">Interactive Map Coming Soon</p>
-            <p className="text-sm text-muted-foreground/70">
-              123 Healing Paws Lane, Greenfield, CA 95000
-            </p>
-          </div>
-        </div>
+      {/* Map Section */}
+      <section className="h-[400px] relative">
+        <MapTilerMap 
+          apiKey={mapApiKey || undefined}
+          className="h-full w-full"
+          markerTitle="Woo-Fur Animal Sanctuary"
+          address="123 Healing Paws Lane, Greenfield, CA 95000"
+        />
       </section>
 
       {/* Social Media Section */}

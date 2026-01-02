@@ -10,22 +10,32 @@ import { Progress } from "@/components/ui/progress";
 import { 
   Heart, Gift, Calculator, Building2, Users, 
   DollarSign, Check, Star, TrendingUp, PawPrint,
-  CreditCard, Lock
+  CreditCard, Lock, Loader2
 } from "lucide-react";
 import { animals, programStats, donationImpacts } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useCreateDonation, useDonationImpact } from "@/hooks/useDonations";
+import { usePayment } from "@/hooks/usePayment";
+import { useAuth } from "@/context/AuthContext";
 
 const donationAmounts = [25, 50, 100, 250, 500, 1000];
 
 const Support = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { mutateAsync: createDonation, isPending: isCreatingDonation } = useCreateDonation();
+  const { data: donationImpactData } = useDonationImpact();
+  const { initiatePayment, isProcessing } = usePayment();
+  
   const [selectedAmount, setSelectedAmount] = useState<number | null>(100);
   const [customAmount, setCustomAmount] = useState("");
   const [isRecurring, setIsRecurring] = useState(false);
-  const [recurringFrequency, setRecurringFrequency] = useState("monthly");
+  const [recurringFrequency, setRecurringFrequency] = useState<"monthly" | "quarterly" | "yearly">("monthly");
   const [allocation, setAllocation] = useState("general");
   const [selectedAnimalId, setSelectedAnimalId] = useState("");
+  const [donorName, setDonorName] = useState("");
+  const [donorEmail, setDonorEmail] = useState("");
 
   const actualAmount = selectedAmount || (customAmount ? parseInt(customAmount) : 0);
   
@@ -34,7 +44,7 @@ const Support = () => {
     return sortedImpacts.find(i => amount >= i.amount)?.impact || "Every dollar helps our animals";
   };
 
-  const handleDonate = () => {
+  const handleDonate = async () => {
     if (actualAmount < 5) {
       toast({
         title: "Minimum Donation",
@@ -43,14 +53,62 @@ const Support = () => {
       });
       return;
     }
-    
-    toast({
-      title: "Thank You!",
-      description: `Your ${isRecurring ? recurringFrequency : "one-time"} donation of $${actualAmount} will make a real difference!`,
-    });
+
+    // Validate email for guest donations
+    if (!user && !donorEmail) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address to receive your donation receipt",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Create donation record first
+      const donationRecord = await createDonation({
+        amount: actualAmount,
+        allocation: { 
+          type: allocation, 
+          id: allocation === "animal" ? selectedAnimalId : undefined 
+        },
+        recurring: isRecurring,
+        recurringFrequency: isRecurring ? recurringFrequency : undefined,
+        donorEmail: user?.email || donorEmail,
+        donorName: donorName || undefined,
+      });
+
+      // Initiate PhonePe payment
+      const result = await initiatePayment({
+        amount: actualAmount,
+        paymentType: "donation",
+        metadata: {
+          donationId: donationRecord.id,
+          allocation: { type: allocation, id: selectedAnimalId || undefined },
+          recurring: isRecurring,
+          recurringFrequency: isRecurring ? recurringFrequency : undefined,
+        },
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || "Payment initiation failed");
+      }
+    } catch (error: any) {
+      console.error("Donation error:", error);
+      toast({
+        title: "Donation Error",
+        description: error.message || "Unable to process donation. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const rehabilitationProgress = (programStats.rehabilitation.currentFunding / programStats.rehabilitation.fundingGoal) * 100;
+  const isLoading = isCreatingDonation || isProcessing;
+
+  // Use real donation impact data if available
+  const totalRaised = donationImpactData?.total_raised || 0;
+  const donorCount = donationImpactData?.donor_count || 0;
 
   return (
     <Layout>
@@ -69,6 +127,12 @@ const Support = () => {
               Your generosity enables us to rescue, rehabilitate, and provide therapy services 
               to those who need it most. Every donation makes a difference.
             </p>
+            {totalRaised > 0 && (
+              <div className="mt-6 inline-flex items-center gap-4 px-6 py-3 bg-card rounded-full shadow-sm">
+                <span className="text-2xl font-bold text-primary">${totalRaised.toLocaleString()}</span>
+                <span className="text-muted-foreground">raised from {donorCount} donors</span>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -140,6 +204,35 @@ const Support = () => {
                     </Card>
                   )}
 
+                  {/* Guest Donor Info */}
+                  {!user && (
+                    <div className="space-y-4">
+                      <Label className="text-base font-semibold">Your Information</Label>
+                      <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="donorName">Name (optional)</Label>
+                          <Input
+                            id="donorName"
+                            value={donorName}
+                            onChange={(e) => setDonorName(e.target.value)}
+                            placeholder="Your name"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="donorEmail">Email *</Label>
+                          <Input
+                            id="donorEmail"
+                            type="email"
+                            value={donorEmail}
+                            onChange={(e) => setDonorEmail(e.target.value)}
+                            placeholder="your@email.com"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Recurring Donation */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -156,12 +249,11 @@ const Support = () => {
                     </div>
                     
                     {isRecurring && (
-                      <Select value={recurringFrequency} onValueChange={setRecurringFrequency}>
+                      <Select value={recurringFrequency} onValueChange={(v) => setRecurringFrequency(v as any)}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="weekly">Weekly</SelectItem>
                           <SelectItem value="monthly">Monthly</SelectItem>
                           <SelectItem value="quarterly">Quarterly</SelectItem>
                           <SelectItem value="yearly">Yearly</SelectItem>
@@ -207,15 +299,24 @@ const Support = () => {
                     onClick={handleDonate} 
                     size="lg" 
                     className="w-full gap-2"
-                    disabled={actualAmount < 5}
+                    disabled={actualAmount < 5 || isLoading}
                   >
-                    <CreditCard className="h-5 w-5" />
-                    Donate ${actualAmount || 0} {isRecurring && `/ ${recurringFrequency.replace("ly", "")}`}
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="h-5 w-5" />
+                        Donate ${actualAmount || 0} {isRecurring && `/ ${recurringFrequency.replace("ly", "")}`}
+                      </>
+                    )}
                   </Button>
                   
                   <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
                     <Lock className="h-3 w-3" />
-                    Secure payment processed by Stripe
+                    Secure payment processed by PhonePe
                   </p>
                 </CardContent>
               </Card>
