@@ -33,6 +33,17 @@ import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
+// Admin pages
+import { AdminLayout } from "./pages/admin/AdminLayout";
+import { AdminDashboard } from "./pages/admin/AdminDashboard";
+import { AdminAnimals } from "./pages/admin/AdminAnimals";
+import { AdminPrograms } from "./pages/admin/AdminPrograms";
+import { AdminBookings } from "./pages/admin/AdminBookings";
+import { AdminUsers } from "./pages/admin/AdminUsers";
+import { AdminContent } from "./pages/admin/AdminContent";
+import { AdminSettings } from "./pages/admin/AdminSettings";
+import { AdminAuditLog } from "./pages/admin/AdminAuditLog";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -76,6 +87,19 @@ const App = () => (
                   </ProtectedRoute>
                 } 
               />
+              
+              {/* Admin Routes */}
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="animals" element={<AdminAnimals />} />
+                <Route path="programs" element={<AdminPrograms />} />
+                <Route path="bookings" element={<AdminBookings />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="content" element={<AdminContent />} />
+                <Route path="settings" element={<AdminSettings />} />
+                <Route path="audit-log" element={<AdminAuditLog />} />
+              </Route>
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
