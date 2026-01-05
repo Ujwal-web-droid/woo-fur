@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Heart, PawPrint } from "lucide-react";
+import { Menu, X, Heart } from "lucide-react";
+import wooFurLogo from "@/assets/woo-fur-logo.png";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { UserMenu } from "@/components/auth/UserMenu";
@@ -24,9 +25,11 @@ export const Header = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform group-hover:scale-110">
-              <PawPrint className="h-5 w-5" />
-            </div>
+            <img 
+              src={wooFurLogo} 
+              alt="Woo-Fur Logo" 
+              className="h-10 w-10 rounded-full transition-transform group-hover:scale-110"
+            />
             <span className="font-heading text-xl font-bold text-foreground">
               Woo-Fur
             </span>
