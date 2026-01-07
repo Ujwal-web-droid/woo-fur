@@ -10,6 +10,8 @@ import {
   PawPrint,
   Sparkles
 } from "lucide-react";
+import { usePageContent } from "@/hooks/usePageContent";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const teamMembers = [
   {
@@ -70,7 +72,45 @@ const values = [
   },
 ];
 
+interface HeroContent {
+  title: string;
+  description: string;
+}
+
+interface FounderContent {
+  title: string;
+  content: string;
+  quote: string;
+}
+
+interface MissionContent {
+  missionTitle: string;
+  missionText: string;
+  visionTitle: string;
+  visionText: string;
+}
+
 const About = () => {
+  const { getSection, isLoading } = usePageContent('about');
+
+  const hero = getSection<HeroContent>('hero', {
+    title: "Our Story",
+    description: "Woo-Fur began with a simple belief: that the bond between humans and animals has the power to heal. What started as a small rescue operation has grown into a sanctuary where healing happens every day."
+  });
+
+  const founder = getSection<FounderContent>('founder', {
+    title: "A Vision Born from Love",
+    content: "In 2018, our founder Dr. Emily Chen witnessed something remarkable. A rescue dog named Biscuit, once timid and afraid, helped a young boy with autism speak his first full sentence. That moment changed everything. Dr. Chen left her veterinary practice to create Woo-Fur—a place where rescued animals could become healers themselves.",
+    quote: "Every animal we rescue has a gift to give. Our job is simply to help them share it."
+  });
+
+  const mission = getSection<MissionContent>('mission', {
+    missionTitle: "Our Mission",
+    missionText: "To rescue animals in need and connect them with humans seeking therapeutic companionship, creating healing experiences that transform lives on both ends of the leash.",
+    visionTitle: "Our Vision",
+    visionText: "A world where every rescued animal has the opportunity to heal and be healed, where the bond between species creates lasting positive change in communities."
+  });
+
   return (
     <Layout>
       {/* Hero Section */}
@@ -79,15 +119,13 @@ const About = () => {
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
               <PawPrint className="h-4 w-4" />
-              <span>Our Story</span>
+              {isLoading ? <Skeleton className="h-4 w-20" /> : <span>{hero.title}</span>}
             </div>
             <h1 className="font-heading text-4xl md:text-5xl font-bold mb-6">
               About <span className="text-gradient">Woo-Fur</span>
             </h1>
             <p className="text-lg text-muted-foreground">
-              Born from a simple belief that healing happens when compassionate humans 
-              and loving animals come together. Our journey started with a few rescued 
-              animals and a vision to transform lives through connection.
+              {isLoading ? <Skeleton className="h-6 w-full" /> : hero.description}
             </p>
           </div>
         </div>
@@ -108,26 +146,14 @@ const About = () => {
             
             <div className="space-y-6">
               <h2 className="font-heading text-3xl md:text-4xl font-bold">
-                The Founder's Story
+                {founder.title}
               </h2>
               <div className="space-y-4 text-muted-foreground">
-                <p>
-                  In 2018, Dr. Emily Chen was a successful veterinarian who felt something 
-                  was missing. She had seen countless animals heal physically, but noticed 
-                  something magical happened when they connected with humans going through 
-                  difficult times.
-                </p>
-                <p>
-                  After rescuing Luna, a gentle golden retriever who had been abandoned, 
-                  Emily witnessed how Luna's presence brought comfort to everyone she met. 
-                  Hospital patients smiled for the first time in weeks. Anxious children 
-                  found calm in her fur.
-                </p>
-                <p>
-                  That's when Woo-Fur was born—a sanctuary where rescued animals become 
-                  healers, and humans find peace through their unconditional love.
-                </p>
+                <p>{founder.content}</p>
               </div>
+              <blockquote className="italic border-l-4 border-primary pl-4 text-muted-foreground">
+                "{founder.quote}"
+              </blockquote>
               <div className="flex items-center gap-4 pt-4">
                 <div className="flex -space-x-2">
                   <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center border-2 border-background">🐕</div>

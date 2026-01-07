@@ -9,17 +9,19 @@ import {
   ArrowRight, 
   Sparkles,
   Users,
-  HandHeart,
   Clock,
-  ChevronRight
+  ChevronRight,
+  HandHeart
 } from "lucide-react";
+import { usePageContent } from "@/hooks/usePageContent";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Animal images
 import lunaImg from "@/assets/animals/luna-golden-retriever.jpg";
 import oliverImg from "@/assets/animals/oliver-tabby-cat.jpg";
 import daisyImg from "@/assets/animals/daisy-rabbit.jpg";
 
-const programs = [
+const defaultPrograms = [
   {
     icon: Heart,
     title: "Animal Rescue",
@@ -46,7 +48,7 @@ const programs = [
   },
 ];
 
-const stats = [
+const defaultStats = [
   { value: "500+", label: "Animals Rescued" },
   { value: "1,200+", label: "Therapy Sessions" },
   { value: "300+", label: "Happy Adoptions" },
@@ -59,7 +61,77 @@ const featuredAnimals = [
   { name: "Daisy", species: "Rabbit", status: "Part-time Pet", image: daisyImg },
 ];
 
+interface HeroContent {
+  badge: string;
+  title: string;
+  titleHighlight: string;
+  description: string;
+  buttonPrimary: string;
+  buttonSecondary: string;
+}
+
+interface StatsItem {
+  value: string;
+  label: string;
+}
+
+interface ProgramsHeaderContent {
+  title: string;
+  description: string;
+}
+
+interface FeaturedStoryContent {
+  badge: string;
+  title: string;
+  content: string;
+  authorName: string;
+  authorRole: string;
+  sessions: string;
+}
+
+interface CTAContent {
+  title: string;
+  description: string;
+  buttonPrimary: string;
+  buttonSecondary: string;
+}
+
 const Index = () => {
+  const { getSection, getSectionList, isLoading } = usePageContent('home');
+
+  const hero = getSection<HeroContent>('hero', {
+    badge: "Healing Through Connection",
+    title: "Where Healing Paws Meet",
+    titleHighlight: "Loving Hearts",
+    description: "Woo-Fur connects rescued animals with humans seeking therapeutic companionship. Every interaction heals two souls.",
+    buttonPrimary: "Book a Visit",
+    buttonSecondary: "Meet Our Animals"
+  });
+
+  const statsData = getSectionList<StatsItem>('stats');
+  const stats = statsData.length > 0 ? statsData : defaultStats;
+
+  const programsHeader = getSection<ProgramsHeaderContent>('programs_header', {
+    title: "Our Programs",
+    description: "Discover the many ways Woo-Fur creates meaningful connections between animals and humans."
+  });
+
+  const featuredStory = getSection<FeaturedStoryContent>('featured_story', {
+    badge: "Featured Story",
+    title: "How Luna Changed Sarah's Life Forever",
+    content: "After months of struggling with anxiety, I found peace in Luna's gentle presence. Our weekly therapy sessions became the highlight of my week. Luna somehow always knows exactly what I need—whether it's a quiet companion or playful energy to lift my spirits.",
+    authorName: "Sarah Mitchell",
+    authorRole: "Therapy Client since 2023",
+    sessions: "200+ Sessions"
+  });
+
+  const cta = getSection<CTAContent>('cta', {
+    title: "Ready to Experience the Healing Power of Animals?",
+    description: "Whether you're looking for therapy sessions, considering adoption, or want to volunteer, we'd love to connect you with our amazing animals.",
+    buttonPrimary: "Schedule a Visit",
+    buttonSecondary: "Make a Donation"
+  });
+
   return (
     <Layout>
       {/* Hero Section */}
@@ -73,30 +145,35 @@ const Index = () => {
           <div className="max-w-3xl mx-auto text-center space-y-6">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium animate-fade-in">
               <PawPrint className="h-4 w-4" />
-              <span>Healing Through Connection</span>
+              {isLoading ? <Skeleton className="h-4 w-32" /> : <span>{hero.badge}</span>}
             </div>
             
             <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight animate-slide-up">
-              Where Healing Paws Meet{" "}
-              <span className="text-gradient">Loving Hearts</span>
+              {isLoading ? (
+                <Skeleton className="h-16 w-full" />
+              ) : (
+                <>
+                  {hero.title}{" "}
+                  <span className="text-gradient">{hero.titleHighlight}</span>
+                </>
+              )}
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: "0.1s" }}>
-              Woo-Fur connects rescued animals with humans seeking therapeutic companionship. 
-              Every interaction heals two souls.
+              {isLoading ? <Skeleton className="h-6 w-full" /> : hero.description}
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 animate-slide-up" style={{ animationDelay: "0.2s" }}>
               <Button size="lg" className="gap-2 min-w-[180px]" asChild>
                 <Link to="/booking">
                   <Calendar className="h-5 w-5" />
-                  Book a Visit
+                  {hero.buttonPrimary}
                 </Link>
               </Button>
               <Button variant="outline" size="lg" className="gap-2 min-w-[180px]" asChild>
                 <Link to="/animals">
                   <Heart className="h-5 w-5" />
-                  Meet Our Animals
+                  {hero.buttonSecondary}
                 </Link>
               </Button>
             </div>
@@ -155,15 +232,15 @@ const Index = () => {
         <div className="container-app">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">
-              Our Programs
+              {programsHeader.title}
             </h2>
             <p className="text-muted-foreground">
-              Discover the many ways Woo-Fur creates meaningful connections between animals and humans.
+              {programsHeader.description}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {programs.map((program, index) => (
+            {defaultPrograms.map((program) => (
               <Card 
                 key={program.title}
                 className="group card-hover border-2 border-transparent hover:border-primary/20"
@@ -197,24 +274,21 @@ const Index = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <span className="inline-block px-3 py-1 rounded-full bg-accent/10 text-accent text-sm font-medium">
-                Featured Story
+                {featuredStory.badge}
               </span>
               <h2 className="font-heading text-3xl md:text-4xl font-bold">
-                How Luna Changed Sarah's Life Forever
+                {featuredStory.title}
               </h2>
               <p className="text-muted-foreground leading-relaxed">
-                "After months of struggling with anxiety, I found peace in Luna's gentle presence. 
-                Our weekly therapy sessions became the highlight of my week. Luna somehow always 
-                knows exactly what I need—whether it's a quiet companion or playful energy to 
-                lift my spirits."
+                "{featuredStory.content}"
               </p>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-xl">
                   👩
                 </div>
                 <div>
-                  <p className="font-medium">Sarah Mitchell</p>
-                  <p className="text-sm text-muted-foreground">Therapy Client since 2023</p>
+                  <p className="font-medium">{featuredStory.authorName}</p>
+                  <p className="text-sm text-muted-foreground">{featuredStory.authorRole}</p>
                 </div>
               </div>
               <Button variant="outline" className="gap-2" asChild>
@@ -235,7 +309,7 @@ const Index = () => {
               <div className="absolute -bottom-4 -right-4 bg-card rounded-xl p-4 shadow-elevated">
                 <div className="flex items-center gap-2">
                   <HandHeart className="h-5 w-5 text-accent" />
-                  <span className="font-medium">200+ Sessions</span>
+                  <span className="font-medium">{featuredStory.sessions}</span>
                 </div>
               </div>
             </div>
@@ -247,23 +321,22 @@ const Index = () => {
       <section className="section-padding bg-primary text-primary-foreground">
         <div className="container-app text-center">
           <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">
-            Ready to Experience the Healing Power of Animals?
+            {cta.title}
           </h2>
           <p className="text-primary-foreground/80 max-w-2xl mx-auto mb-8">
-            Whether you're looking for therapy sessions, considering adoption, or want to volunteer, 
-            we'd love to connect you with our amazing animals.
+            {cta.description}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" variant="secondary" className="gap-2 min-w-[180px]" asChild>
               <Link to="/booking">
                 <Calendar className="h-5 w-5" />
-                Schedule a Visit
+                {cta.buttonPrimary}
               </Link>
             </Button>
             <Button size="lg" variant="outline" className="gap-2 min-w-[180px] bg-transparent border-primary-foreground/30 hover:bg-primary-foreground/10" asChild>
               <Link to="/support">
                 <Heart className="h-5 w-5" />
-                Make a Donation
+                {cta.buttonSecondary}
               </Link>
             </Button>
           </div>
