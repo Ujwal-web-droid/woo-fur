@@ -87,13 +87,17 @@ const Index = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 animate-slide-up" style={{ animationDelay: "0.2s" }}>
-              <Button size="lg" className="gap-2 min-w-[180px]">
-                <Calendar className="h-5 w-5" />
-                Book a Visit
+              <Button size="lg" className="gap-2 min-w-[180px]" asChild>
+                <Link to="/booking">
+                  <Calendar className="h-5 w-5" />
+                  Book a Visit
+                </Link>
               </Button>
-              <Button variant="outline" size="lg" className="gap-2 min-w-[180px]">
-                <Heart className="h-5 w-5" />
-                Meet Our Animals
+              <Button variant="outline" size="lg" className="gap-2 min-w-[180px]" asChild>
+                <Link to="/animals">
+                  <Heart className="h-5 w-5" />
+                  Meet Our Animals
+                </Link>
               </Button>
             </div>
           </div>
@@ -213,8 +217,10 @@ const Index = () => {
                   <p className="text-sm text-muted-foreground">Therapy Client since 2023</p>
                 </div>
               </div>
-              <Button variant="outline" className="gap-2">
-                Read More Stories <ArrowRight className="h-4 w-4" />
+              <Button variant="outline" className="gap-2" asChild>
+                <Link to="/stories">
+                  Read More Stories <ArrowRight className="h-4 w-4" />
+                </Link>
               </Button>
             </div>
             
@@ -248,13 +254,17 @@ const Index = () => {
             we'd love to connect you with our amazing animals.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" variant="secondary" className="gap-2 min-w-[180px]">
-              <Calendar className="h-5 w-5" />
-              Schedule a Visit
+            <Button size="lg" variant="secondary" className="gap-2 min-w-[180px]" asChild>
+              <Link to="/booking">
+                <Calendar className="h-5 w-5" />
+                Schedule a Visit
+              </Link>
             </Button>
-            <Button size="lg" variant="outline" className="gap-2 min-w-[180px] bg-transparent border-primary-foreground/30 hover:bg-primary-foreground/10">
-              <Heart className="h-5 w-5" />
-              Make a Donation
+            <Button size="lg" variant="outline" className="gap-2 min-w-[180px] bg-transparent border-primary-foreground/30 hover:bg-primary-foreground/10" asChild>
+              <Link to="/support">
+                <Heart className="h-5 w-5" />
+                Make a Donation
+              </Link>
             </Button>
           </div>
         </div>
