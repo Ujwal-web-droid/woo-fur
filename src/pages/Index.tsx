@@ -14,9 +14,10 @@ import {
   HandHeart
 } from "lucide-react";
 import { usePageContent } from "@/hooks/usePageContent";
+import { useWebsiteImages } from "@/hooks/useWebsiteImages";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Animal images
+// Default animal images (fallback)
 import lunaImg from "@/assets/animals/luna-golden-retriever.jpg";
 import oliverImg from "@/assets/animals/oliver-tabby-cat.jpg";
 import daisyImg from "@/assets/animals/daisy-rabbit.jpg";
@@ -68,6 +69,7 @@ interface HeroContent {
   description: string;
   buttonPrimary: string;
   buttonSecondary: string;
+  heroImage?: string;
 }
 
 interface StatsItem {
@@ -87,6 +89,7 @@ interface FeaturedStoryContent {
   authorName: string;
   authorRole: string;
   sessions: string;
+  storyImage?: string;
 }
 
 interface CTAContent {
@@ -98,7 +101,7 @@ interface CTAContent {
 
 const Index = () => {
   const { getSection, getSectionList, isLoading } = usePageContent('home');
-
+  const { getImage, isLoading: imagesLoading } = useWebsiteImages();
   const hero = getSection<HeroContent>('hero', {
     badge: "Healing Through Connection",
     title: "Where Healing Paws Meet",
@@ -301,7 +304,7 @@ const Index = () => {
             <div className="relative">
               <div className="aspect-square rounded-2xl overflow-hidden shadow-elevated">
                 <img 
-                  src={lunaImg} 
+                  src={getImage('home-featured-story', featuredStory.storyImage || lunaImg)} 
                   alt="Luna the therapy dog"
                   className="w-full h-full object-cover"
                 />
