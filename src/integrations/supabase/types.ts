@@ -278,6 +278,53 @@ export type Database = {
         }
         Relationships: []
       }
+      image_history: {
+        Row: {
+          created_at: string
+          id: string
+          image_key: string
+          image_url: string
+          is_current: boolean | null
+          metadata: Json | null
+          page_slug: string | null
+          replaced_by: string | null
+          section_key: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_key: string
+          image_url: string
+          is_current?: boolean | null
+          metadata?: Json | null
+          page_slug?: string | null
+          replaced_by?: string | null
+          section_key?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_key?: string
+          image_url?: string
+          is_current?: boolean | null
+          metadata?: Json | null
+          page_slug?: string | null
+          replaced_by?: string | null
+          section_key?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "image_history_replaced_by_fkey"
+            columns: ["replaced_by"]
+            isOneToOne: false
+            referencedRelation: "image_history"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       page_content: {
         Row: {
           content: Json
