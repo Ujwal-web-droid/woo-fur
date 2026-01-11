@@ -15,6 +15,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useEmail } from "@/hooks/useEmail";
 import { MapTilerMap } from "@/components/maps/MapTilerMap";
+import { usePageContent } from "@/hooks/usePageContent";
 import {
   MapPin,
   Phone,
@@ -30,33 +31,45 @@ import {
   Youtube,
 } from "lucide-react";
 
-const contactReasons = [
-  "General Inquiry",
-  "Therapy Session Booking",
-  "Adoption Information",
-  "Volunteer Opportunities",
-  "Donation Questions",
-  "Media & Press",
-  "Partnership Inquiry",
-  "Other",
-];
+const socialIconMap: Record<string, React.ElementType> = {
+  Facebook, Instagram, Twitter, Youtube
+};
 
-const operatingHours = [
-  { day: "Monday - Friday", hours: "9:00 AM - 6:00 PM" },
-  { day: "Saturday", hours: "10:00 AM - 4:00 PM" },
-  { day: "Sunday", hours: "12:00 PM - 4:00 PM" },
-];
+interface HeroContent {
+  badge: string;
+  title: string;
+  titleHighlight: string;
+  description: string;
+}
 
-const socialLinks = [
-  { name: "Facebook", icon: Facebook, url: "#", followers: "12.5K" },
-  { name: "Instagram", icon: Instagram, url: "#", followers: "28K" },
-  { name: "Twitter", icon: Twitter, url: "#", followers: "8.2K" },
-  { name: "Youtube", icon: Youtube, url: "#", followers: "5.1K" },
-];
+interface InfoContent {
+  address: string;
+  phone: string;
+  emergencyPhone: string;
+  email: string;
+  responseTime: string;
+}
+
+interface HoursContent {
+  title: string;
+  note: string;
+  items: Array<{ day: string; hours: string }>;
+}
+
+interface SocialContent {
+  title: string;
+  description: string;
+  items: Array<{ name: string; url: string; followers: string }>;
+}
+
+interface ReasonsContent {
+  items: string[];
+}
 
 const Contact = () => {
   const { toast } = useToast();
   const { sendContactForm } = useEmail();
+  const { getSection, isLoading } = usePageContent('contact');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mapApiKey, setMapApiKey] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -67,10 +80,57 @@ const Contact = () => {
     message: "",
   });
 
+  const hero = getSection<HeroContent>('hero', {
+    badge: "Get in Touch",
+    title: "Contact",
+    titleHighlight: "Woo-Fur",
+    description: "Have questions about our programs, want to schedule a visit, or interested in volunteering? We'd love to hear from you!"
+  });
+
+  const info = getSection<InfoContent>('info', {
+    address: "123 Healing Paws Lane, Greenfield, CA 95000",
+    phone: "(555) 123-4567",
+    emergencyPhone: "(555) 123-9999",
+    email: "hello@woo-fur.org",
+    responseTime: "We respond within 24-48 hours"
+  });
+
+  const hours = getSection<HoursContent>('hours', {
+    title: "Operating Hours",
+    note: "Therapy sessions are by appointment only. Please book in advance.",
+    items: [
+      { day: "Monday - Friday", hours: "9:00 AM - 6:00 PM" },
+      { day: "Saturday", hours: "10:00 AM - 4:00 PM" },
+      { day: "Sunday", hours: "12:00 PM - 4:00 PM" }
+    ]
+  });
+
+  const social = getSection<SocialContent>('social', {
+    title: "Follow Our Journey",
+    description: "Stay connected with daily updates, rescue stories, and adorable moments.",
+    items: [
+      { name: "Facebook", url: "#", followers: "12.5K" },
+      { name: "Instagram", url: "#", followers: "28K" },
+      { name: "Twitter", url: "#", followers: "8.2K" },
+      { name: "Youtube", url: "#", followers: "5.1K" }
+    ]
+  });
+
+  const reasons = getSection<ReasonsContent>('reasons', {
+    items: [
+      "General Inquiry",
+      "Therapy Session Booking",
+      "Adoption Information",
+      "Volunteer Opportunities",
+      "Donation Questions",
+      "Media & Press",
+      "Partnership Inquiry",
+      "Other"
+    ]
+  });
+
   // Fetch MapTiler API key from environment
   useEffect(() => {
-    // The API key is stored in Supabase secrets and accessed via edge function
-    // For now, we'll use a state that can be populated
     const key = import.meta.env.VITE_MAPTILER_API_KEY;
     if (key) setMapApiKey(key);
   }, []);
@@ -122,14 +182,13 @@ const Contact = () => {
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
               <MessageCircle className="h-4 w-4" />
-              <span>Get in Touch</span>
+              <span>{hero.badge}</span>
             </div>
             <h1 className="font-heading text-4xl md:text-5xl font-bold mb-6">
-              Contact <span className="text-gradient">Woo-Fur</span>
+              {hero.title} <span className="text-gradient">{hero.titleHighlight}</span>
             </h1>
             <p className="text-lg text-muted-foreground">
-              Have questions about our programs, want to schedule a visit, or
-              interested in volunteering? We'd love to hear from you!
+              {hero.description}
             </p>
           </div>
         </div>
@@ -201,7 +260,7 @@ const Contact = () => {
                             <SelectValue placeholder="Select a reason" />
                           </SelectTrigger>
                           <SelectContent>
-                            {contactReasons.map((reason) => (
+                            {reasons.items.map((reason) => (
                               <SelectItem key={reason} value={reason}>
                                 {reason}
                               </SelectItem>
@@ -257,10 +316,8 @@ const Contact = () => {
                       <h3 className="font-heading font-semibold mb-1">
                         Visit Us
                       </h3>
-                      <p className="text-sm text-muted-foreground">
-                        123 Healing Paws Lane
-                        <br />
-                        Greenfield, CA 95000
+                      <p className="text-sm text-muted-foreground whitespace-pre-line">
+                        {info.address}
                       </p>
                       <Button
                         variant="link"
@@ -285,10 +342,10 @@ const Contact = () => {
                         Call Us
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        (555) 123-4567
+                        {info.phone}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        For emergencies: (555) 123-9999
+                        For emergencies: {info.emergencyPhone}
                       </p>
                     </div>
                   </div>
@@ -302,10 +359,10 @@ const Contact = () => {
                         Email Us
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        hello@woo-fur.org
+                        {info.email}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        We respond within 24-48 hours
+                        {info.responseTime}
                       </p>
                     </div>
                   </div>
@@ -320,11 +377,11 @@ const Contact = () => {
                       <Clock className="h-5 w-5 text-primary" />
                     </div>
                     <h3 className="font-heading font-semibold">
-                      Operating Hours
+                      {hours.title}
                     </h3>
                   </div>
                   <div className="space-y-2">
-                    {operatingHours.map((schedule) => (
+                    {hours.items.map((schedule) => (
                       <div
                         key={schedule.day}
                         className="flex justify-between text-sm"
@@ -338,8 +395,7 @@ const Contact = () => {
                   </div>
                   <div className="mt-4 pt-4 border-t border-border">
                     <p className="text-xs text-muted-foreground">
-                      <strong>Note:</strong> Therapy sessions are by appointment
-                      only. Please book in advance.
+                      <strong>Note:</strong> {hours.note}
                     </p>
                   </div>
                 </CardContent>
@@ -374,7 +430,7 @@ const Contact = () => {
           apiKey={mapApiKey || undefined}
           className="h-full w-full"
           markerTitle="Woo-Fur Animal Sanctuary"
-          address="123 Healing Paws Lane, Greenfield, CA 95000"
+          address={info.address}
         />
       </section>
 
@@ -383,28 +439,31 @@ const Contact = () => {
         <div className="container-app">
           <div className="text-center mb-8">
             <h2 className="font-heading text-2xl font-bold mb-2">
-              Follow Our Journey
+              {social.title}
             </h2>
             <p className="text-background/70">
-              Stay connected with daily updates, rescue stories, and adorable moments.
+              {social.description}
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-4">
-            {socialLinks.map((social) => (
-              <a
-                key={social.name}
-                href={social.url}
-                className="flex items-center gap-3 px-6 py-3 rounded-xl bg-background/10 hover:bg-background/20 transition-colors"
-              >
-                <social.icon className="h-5 w-5" />
-                <div className="text-left">
-                  <p className="text-sm font-medium">{social.name}</p>
-                  <p className="text-xs text-background/60">
-                    {social.followers} followers
-                  </p>
-                </div>
-              </a>
-            ))}
+            {social.items.map((item) => {
+              const Icon = socialIconMap[item.name] || MessageCircle;
+              return (
+                <a
+                  key={item.name}
+                  href={item.url}
+                  className="flex items-center gap-3 px-6 py-3 rounded-xl bg-background/10 hover:bg-background/20 transition-colors"
+                >
+                  <Icon className="h-5 w-5" />
+                  <div className="text-left">
+                    <p className="text-sm font-medium">{item.name}</p>
+                    <p className="text-xs text-background/60">
+                      {item.followers} followers
+                    </p>
+                  </div>
+                </a>
+              );
+            })}
           </div>
         </div>
       </section>
