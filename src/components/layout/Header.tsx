@@ -5,19 +5,56 @@ import wooFurLogo from "@/assets/woo-fur-logo.png";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { UserMenu } from "@/components/auth/UserMenu";
+import { usePageContent } from "@/hooks/usePageContent";
 
-const navLinks = [
-  { name: "Home", path: "/" },
-  { name: "Animals", path: "/animals" },
-  { name: "Programs", path: "/programs" },
-  { name: "Stories", path: "/stories" },
-  { name: "About", path: "/about" },
-  { name: "Contact", path: "/contact" },
-];
+interface NavItem {
+  name: string;
+  path: string;
+}
+
+interface NavigationContent {
+  items: NavItem[];
+}
+
+interface CTAContent {
+  donateText: string;
+  bookText: string;
+  donatePath: string;
+  bookPath: string;
+}
+
+interface BrandContent {
+  name: string;
+  logoAlt: string;
+}
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { getSection } = usePageContent('header');
+
+  const navigation = getSection<NavigationContent>('navigation', {
+    items: [
+      { name: "Home", path: "/" },
+      { name: "Animals", path: "/animals" },
+      { name: "Programs", path: "/programs" },
+      { name: "Stories", path: "/stories" },
+      { name: "About", path: "/about" },
+      { name: "Contact", path: "/contact" },
+    ]
+  });
+
+  const cta = getSection<CTAContent>('cta', {
+    donateText: "Donate",
+    bookText: "Book a Visit",
+    donatePath: "/support",
+    bookPath: "/booking"
+  });
+
+  const brand = getSection<BrandContent>('brand', {
+    name: "Woo-Fur",
+    logoAlt: "Woo-Fur Logo"
+  });
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -27,17 +64,17 @@ export const Header = () => {
           <Link to="/" className="flex items-center gap-2 group">
             <img 
               src={wooFurLogo} 
-              alt="Woo-Fur Logo" 
+              alt={brand.logoAlt} 
               className="h-10 w-10 rounded-full transition-transform group-hover:scale-110"
             />
             <span className="font-heading text-xl font-bold text-foreground">
-              Woo-Fur
+              {brand.name}
             </span>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
+            {navigation.items.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
@@ -55,14 +92,14 @@ export const Header = () => {
 
           {/* CTA Buttons & User Menu */}
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/support">
+            <Link to={cta.donatePath}>
               <Button variant="outline" size="sm" className="gap-2">
                 <Heart className="h-4 w-4" />
-                Donate
+                {cta.donateText}
               </Button>
             </Link>
-            <Link to="/booking">
-              <Button size="sm">Book a Visit</Button>
+            <Link to={cta.bookPath}>
+              <Button size="sm">{cta.bookText}</Button>
             </Link>
             <UserMenu />
           </div>
@@ -86,7 +123,7 @@ export const Header = () => {
       {isMenuOpen && (
         <div className="md:hidden border-t border-border bg-background animate-fade-in">
           <nav className="container-app py-4 flex flex-col gap-1">
-            {navLinks.map((link) => (
+            {navigation.items.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
@@ -102,14 +139,14 @@ export const Header = () => {
               </Link>
             ))}
             <div className="flex items-center gap-3 mt-4 pt-4 border-t border-border">
-              <Link to="/support" className="flex-1">
+              <Link to={cta.donatePath} className="flex-1">
                 <Button variant="outline" className="w-full gap-2">
                   <Heart className="h-4 w-4" />
-                  Donate
+                  {cta.donateText}
                 </Button>
               </Link>
-              <Link to="/booking" className="flex-1">
-                <Button className="w-full">Book a Visit</Button>
+              <Link to={cta.bookPath} className="flex-1">
+                <Button className="w-full">{cta.bookText}</Button>
               </Link>
             </div>
             <div className="flex justify-center mt-4">

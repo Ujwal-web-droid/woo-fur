@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Plus, Pencil, Trash2, Eye, EyeOff, Save, FileText, Home, Info, Phone, LayoutTemplate, Heart, Image as ImageIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, EyeOff, Save, FileText, Home, Info, Phone, LayoutTemplate, Heart, Image as ImageIcon, Users, HelpCircle, Calendar, Menu } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { ImageUploader } from '@/components/admin/ImageUploader';
@@ -33,6 +33,10 @@ const PAGE_CONFIG = {
   contact: { label: 'Contact', icon: Phone, color: 'text-purple-500' },
   programs: { label: 'Programs', icon: LayoutTemplate, color: 'text-orange-500' },
   support: { label: 'Support', icon: Heart, color: 'text-pink-500' },
+  volunteer: { label: 'Volunteer', icon: Users, color: 'text-teal-500' },
+  booking: { label: 'Booking', icon: Calendar, color: 'text-indigo-500' },
+  faq: { label: 'FAQ', icon: HelpCircle, color: 'text-yellow-500' },
+  header: { label: 'Header', icon: Menu, color: 'text-red-500' },
   footer: { label: 'Footer', icon: FileText, color: 'text-gray-500' },
 };
 
@@ -89,7 +93,6 @@ const SECTION_TEMPLATES: Record<string, Record<string, { label: string; fields: 
         { key: 'description', label: 'CTA Description', type: 'textarea' },
         { key: 'buttonPrimary', label: 'Primary Button', type: 'text' },
         { key: 'buttonSecondary', label: 'Secondary Button', type: 'text' },
-        { key: 'ctaImage', label: 'Background Image', type: 'image', aspectRatio: '21/9' },
       ],
     },
   },
@@ -99,7 +102,6 @@ const SECTION_TEMPLATES: Record<string, Record<string, { label: string; fields: 
       fields: [
         { key: 'title', label: 'Page Title', type: 'text' },
         { key: 'description', label: 'Page Description', type: 'textarea' },
-        { key: 'heroImage', label: 'Hero Image', type: 'image', aspectRatio: '16/9' },
       ],
     },
     founder: {
@@ -108,7 +110,6 @@ const SECTION_TEMPLATES: Record<string, Record<string, { label: string; fields: 
         { key: 'title', label: 'Section Title', type: 'text' },
         { key: 'content', label: 'Story Content', type: 'textarea' },
         { key: 'quote', label: 'Quote', type: 'textarea' },
-        { key: 'founderImage', label: 'Founder Photo', type: 'image', aspectRatio: '1/1' },
       ],
     },
     mission: {
@@ -124,15 +125,38 @@ const SECTION_TEMPLATES: Record<string, Record<string, { label: string; fields: 
       label: 'Team Section',
       fields: [
         { key: 'title', label: 'Section Title', type: 'text' },
+        { key: 'description', label: 'Description', type: 'textarea' },
         { key: 'members', label: 'Team Members (JSON Array)', type: 'array' },
       ],
+    },
+    milestones: {
+      label: 'Timeline/Milestones',
+      fields: [
+        { key: 'title', label: 'Section Title', type: 'text' },
+        { key: 'description', label: 'Description', type: 'textarea' },
+        { key: 'items', label: 'Milestones (JSON Array)', type: 'array' },
+      ],
+    },
+    values: {
+      label: 'Core Values',
+      fields: [
+        { key: 'title', label: 'Section Title', type: 'text' },
+        { key: 'description', label: 'Description', type: 'textarea' },
+        { key: 'items', label: 'Values (JSON Array)', type: 'array' },
+      ],
+    },
+    awards: {
+      label: 'Awards',
+      fields: [{ key: 'items', label: 'Awards (JSON Array)', type: 'array' }],
     },
   },
   contact: {
     hero: {
       label: 'Hero Section',
       fields: [
+        { key: 'badge', label: 'Badge Text', type: 'text' },
         { key: 'title', label: 'Page Title', type: 'text' },
+        { key: 'titleHighlight', label: 'Title Highlight', type: 'text' },
         { key: 'description', label: 'Page Description', type: 'textarea' },
       ],
     },
@@ -141,12 +165,198 @@ const SECTION_TEMPLATES: Record<string, Record<string, { label: string; fields: 
       fields: [
         { key: 'address', label: 'Address', type: 'text' },
         { key: 'phone', label: 'Phone Number', type: 'text' },
+        { key: 'emergencyPhone', label: 'Emergency Phone', type: 'text' },
         { key: 'email', label: 'Email Address', type: 'text' },
+        { key: 'responseTime', label: 'Response Time Text', type: 'text' },
       ],
     },
     hours: {
       label: 'Operating Hours',
-      fields: [{ key: 'items', label: 'Hours (JSON Array)', type: 'array' }],
+      fields: [
+        { key: 'title', label: 'Section Title', type: 'text' },
+        { key: 'note', label: 'Note Text', type: 'textarea' },
+        { key: 'items', label: 'Hours (JSON Array)', type: 'array' },
+      ],
+    },
+    social: {
+      label: 'Social Media',
+      fields: [
+        { key: 'title', label: 'Section Title', type: 'text' },
+        { key: 'description', label: 'Description', type: 'textarea' },
+        { key: 'items', label: 'Social Links (JSON Array)', type: 'array' },
+      ],
+    },
+    reasons: {
+      label: 'Contact Reasons',
+      fields: [{ key: 'items', label: 'Reasons (JSON Array)', type: 'array' }],
+    },
+  },
+  programs: {
+    hero: {
+      label: 'Hero Section',
+      fields: [
+        { key: 'badge', label: 'Badge Text', type: 'text' },
+        { key: 'title', label: 'Title', type: 'text' },
+        { key: 'titleHighlight', label: 'Title Highlight', type: 'text' },
+        { key: 'description', label: 'Description', type: 'textarea' },
+      ],
+    },
+    programs_list: {
+      label: 'Programs List',
+      fields: [{ key: 'items', label: 'Programs (JSON Array)', type: 'array' }],
+    },
+    process: {
+      label: 'How It Works',
+      fields: [
+        { key: 'badge', label: 'Badge Text', type: 'text' },
+        { key: 'title', label: 'Section Title', type: 'text' },
+        { key: 'steps', label: 'Process Steps (JSON Array)', type: 'array' },
+      ],
+    },
+    cta: {
+      label: 'Call to Action',
+      fields: [
+        { key: 'title', label: 'CTA Title', type: 'text' },
+        { key: 'description', label: 'CTA Description', type: 'textarea' },
+        { key: 'buttonPrimary', label: 'Primary Button', type: 'text' },
+        { key: 'buttonSecondary', label: 'Secondary Button', type: 'text' },
+      ],
+    },
+  },
+  support: {
+    hero: {
+      label: 'Hero Section',
+      fields: [
+        { key: 'badge', label: 'Badge Text', type: 'text' },
+        { key: 'title', label: 'Title', type: 'text' },
+        { key: 'titleHighlight', label: 'Title Highlight', type: 'text' },
+        { key: 'description', label: 'Description', type: 'textarea' },
+      ],
+    },
+    donation: {
+      label: 'Donation Section',
+      fields: [
+        { key: 'title', label: 'Section Title', type: 'text' },
+        { key: 'amounts', label: 'Donation Amounts (JSON Array)', type: 'array' },
+        { key: 'minimumAmount', label: 'Minimum Amount', type: 'text' },
+      ],
+    },
+    impact: {
+      label: 'Impact Section',
+      fields: [
+        { key: 'title', label: 'Section Title', type: 'text' },
+        { key: 'items', label: 'Impact Items (JSON Array)', type: 'array' },
+      ],
+    },
+    testimonial: {
+      label: 'Donor Testimonial',
+      fields: [
+        { key: 'quote', label: 'Quote', type: 'textarea' },
+        { key: 'author', label: 'Author Name', type: 'text' },
+        { key: 'role', label: 'Author Role', type: 'text' },
+      ],
+    },
+    corporate: {
+      label: 'Corporate Partnerships',
+      fields: [
+        { key: 'title', label: 'Section Title', type: 'text' },
+        { key: 'description', label: 'Description', type: 'textarea' },
+        { key: 'items', label: 'Partnership Types (JSON Array)', type: 'array' },
+      ],
+    },
+  },
+  volunteer: {
+    hero: {
+      label: 'Hero Section',
+      fields: [
+        { key: 'badge', label: 'Badge Text', type: 'text' },
+        { key: 'title', label: 'Title', type: 'text' },
+        { key: 'titleHighlight', label: 'Title Highlight', type: 'text' },
+        { key: 'description', label: 'Description', type: 'textarea' },
+        { key: 'buttonText', label: 'Button Text', type: 'text' },
+      ],
+    },
+    stats: {
+      label: 'Statistics',
+      fields: [{ key: 'items', label: 'Stats Items (JSON Array)', type: 'array' }],
+    },
+    skills: {
+      label: 'Skills Options',
+      fields: [{ key: 'items', label: 'Skills (JSON Array)', type: 'array' }],
+    },
+    availability: {
+      label: 'Availability Options',
+      fields: [{ key: 'items', label: 'Availability Options (JSON Array)', type: 'array' }],
+    },
+    benefits: {
+      label: 'Benefits Section',
+      fields: [
+        { key: 'title', label: 'Section Title', type: 'text' },
+        { key: 'items', label: 'Benefits (JSON Array)', type: 'array' },
+      ],
+    },
+  },
+  booking: {
+    hero: {
+      label: 'Hero Section',
+      fields: [
+        { key: 'badge', label: 'Badge Text', type: 'text' },
+        { key: 'title', label: 'Title', type: 'text' },
+        { key: 'titleHighlight', label: 'Title Highlight', type: 'text' },
+        { key: 'description', label: 'Description', type: 'textarea' },
+      ],
+    },
+    services: {
+      label: 'Service Types',
+      fields: [{ key: 'items', label: 'Services (JSON Array)', type: 'array' }],
+    },
+    steps: {
+      label: 'Booking Steps',
+      fields: [{ key: 'items', label: 'Steps (JSON Array)', type: 'array' }],
+    },
+  },
+  faq: {
+    hero: {
+      label: 'Hero Section',
+      fields: [
+        { key: 'badge', label: 'Badge Text', type: 'text' },
+        { key: 'title', label: 'Title', type: 'text' },
+        { key: 'titleHighlight', label: 'Title Highlight', type: 'text' },
+        { key: 'description', label: 'Description', type: 'textarea' },
+      ],
+    },
+    categories: {
+      label: 'FAQ Categories',
+      fields: [{ key: 'items', label: 'Categories (JSON Array)', type: 'array' }],
+    },
+    popular_topics: {
+      label: 'Popular Topics',
+      fields: [
+        { key: 'title', label: 'Section Title', type: 'text' },
+        { key: 'items', label: 'Topics (JSON Array)', type: 'array' },
+      ],
+    },
+  },
+  header: {
+    navigation: {
+      label: 'Navigation Links',
+      fields: [{ key: 'items', label: 'Nav Links (JSON Array)', type: 'array' }],
+    },
+    cta: {
+      label: 'Header CTA Buttons',
+      fields: [
+        { key: 'donateText', label: 'Donate Button Text', type: 'text' },
+        { key: 'bookText', label: 'Book Button Text', type: 'text' },
+        { key: 'donatePath', label: 'Donate Link Path', type: 'text' },
+        { key: 'bookPath', label: 'Book Link Path', type: 'text' },
+      ],
+    },
+    brand: {
+      label: 'Brand Settings',
+      fields: [
+        { key: 'name', label: 'Site Name', type: 'text' },
+        { key: 'logoAlt', label: 'Logo Alt Text', type: 'text' },
+      ],
     },
   },
   footer: {
@@ -154,7 +364,6 @@ const SECTION_TEMPLATES: Record<string, Record<string, { label: string; fields: 
       label: 'Brand Section',
       fields: [
         { key: 'tagline', label: 'Tagline', type: 'textarea' },
-        { key: 'logo', label: 'Footer Logo', type: 'image', aspectRatio: '1/1' },
       ],
     },
     contact: {
@@ -168,50 +377,6 @@ const SECTION_TEMPLATES: Record<string, Record<string, { label: string; fields: 
     copyright: {
       label: 'Copyright',
       fields: [{ key: 'text', label: 'Footer Text', type: 'text' }],
-    },
-  },
-  programs: {
-    hero: {
-      label: 'Hero Section',
-      fields: [
-        { key: 'title', label: 'Page Title', type: 'text' },
-        { key: 'description', label: 'Page Description', type: 'textarea' },
-        { key: 'heroImage', label: 'Hero Image', type: 'image', aspectRatio: '16/9' },
-      ],
-    },
-    rescue: {
-      label: 'Rescue Program',
-      fields: [
-        { key: 'title', label: 'Title', type: 'text' },
-        { key: 'description', label: 'Description', type: 'textarea' },
-        { key: 'image', label: 'Program Image', type: 'image', aspectRatio: '16/9' },
-      ],
-    },
-    therapy: {
-      label: 'Therapy Program',
-      fields: [
-        { key: 'title', label: 'Title', type: 'text' },
-        { key: 'description', label: 'Description', type: 'textarea' },
-        { key: 'image', label: 'Program Image', type: 'image', aspectRatio: '16/9' },
-      ],
-    },
-  },
-  support: {
-    hero: {
-      label: 'Hero Section',
-      fields: [
-        { key: 'title', label: 'Page Title', type: 'text' },
-        { key: 'description', label: 'Page Description', type: 'textarea' },
-        { key: 'heroImage', label: 'Hero Image', type: 'image', aspectRatio: '16/9' },
-      ],
-    },
-    donation: {
-      label: 'Donation Section',
-      fields: [
-        { key: 'title', label: 'Section Title', type: 'text' },
-        { key: 'description', label: 'Description', type: 'textarea' },
-        { key: 'donationImage', label: 'Donation Image', type: 'image', aspectRatio: '4/3' },
-      ],
     },
   },
 };
@@ -229,6 +394,9 @@ const IMAGE_SLOTS = [
   { key: 'therapy-program', label: 'Therapy Program Image', page: 'programs', aspectRatio: '16/9' },
   { key: 'rehabilitation-program', label: 'Rehabilitation Program Image', page: 'programs', aspectRatio: '16/9' },
   { key: 'part-time-pets', label: 'Part-time Pets Image', page: 'programs', aspectRatio: '16/9' },
+  { key: 'volunteer-hero', label: 'Volunteer Page Hero', page: 'volunteer', aspectRatio: '16/9' },
+  { key: 'booking-hero', label: 'Booking Page Hero', page: 'booking', aspectRatio: '16/9' },
+  { key: 'faq-hero', label: 'FAQ Page Hero', page: 'faq', aspectRatio: '16/9' },
 ];
 
 export function AdminContent() {
@@ -326,7 +494,9 @@ export function AdminContent() {
     if (template) {
       template.fields.forEach(field => {
         if (field.type === 'array') {
-          fields[field.key] = JSON.stringify(block.content, null, 2);
+          // For array fields, check if the content itself is an array or if it has an items key
+          const arrayContent = block.content[field.key] || block.content.items || block.content;
+          fields[field.key] = JSON.stringify(Array.isArray(arrayContent) ? arrayContent : block.content, null, 2);
         } else if (field.type === 'image') {
           fields[field.key] = block.content[field.key] || '';
         } else {
@@ -359,18 +529,28 @@ export function AdminContent() {
     let contentObj: Record<string, any> = {};
 
     if (template) {
-      if (template.fields.some(f => f.type === 'array')) {
-        try {
-          contentObj = JSON.parse(formFields['items'] || formFields['rawJson'] || '[]');
-        } catch {
-          toast({ title: 'Invalid JSON format', variant: 'destructive' });
-          return;
+      const hasArrayField = template.fields.some(f => f.type === 'array');
+      if (hasArrayField) {
+        // For array-only sections, parse the array field
+        const arrayField = template.fields.find(f => f.type === 'array');
+        if (arrayField) {
+          try {
+            const parsedArray = JSON.parse(formFields[arrayField.key] || formFields['items'] || '[]');
+            // Include other non-array fields
+            template.fields.forEach(field => {
+              if (field.type !== 'array') {
+                contentObj[field.key] = formFields[field.key] || '';
+              }
+            });
+            contentObj[arrayField.key] = parsedArray;
+          } catch {
+            toast({ title: 'Invalid JSON format', variant: 'destructive' });
+            return;
+          }
         }
       } else {
         template.fields.forEach(field => {
-          if (field.type !== 'array') {
-            contentObj[field.key] = formFields[field.key] || '';
-          }
+          contentObj[field.key] = formFields[field.key] || '';
         });
       }
     } else if (formFields['rawJson']) {
@@ -451,8 +631,8 @@ export function AdminContent() {
             ) : field.type === 'array' ? (
               <Textarea
                 id={field.key}
-                value={formFields[field.key] || formFields['items'] || '[]'}
-                onChange={(e) => setFormFields({ ...formFields, [field.key]: e.target.value, items: e.target.value })}
+                value={formFields[field.key] || '[]'}
+                onChange={(e) => setFormFields({ ...formFields, [field.key]: e.target.value })}
                 rows={8}
                 className="font-mono text-sm"
                 placeholder='[{"key": "value"}]'
@@ -475,134 +655,134 @@ export function AdminContent() {
     const pageImages = IMAGE_SLOTS.filter(slot => slot.page === selectedPage);
     
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {pageImages.map(slot => (
-          <Card key={slot.key}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">{slot.label}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ImageUploader
-                imageKey={slot.key}
-                currentUrl={currentImages[slot.key]}
-                pageSlug={slot.page}
-                aspectRatio={slot.aspectRatio}
-              />
-            </CardContent>
-          </Card>
-        ))}
-        {pageImages.length === 0 && (
-          <Card className="col-span-full">
-            <CardContent className="py-12 text-center">
-              <ImageIcon className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No dedicated image slots for this page</p>
-            </CardContent>
-          </Card>
+      <div className="space-y-6">
+        <div className="text-sm text-muted-foreground mb-4">
+          Upload and manage images for this page. Changes are applied instantly.
+        </div>
+        
+        {pageImages.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            No image slots defined for this page.
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2">
+            {pageImages.map(slot => (
+              <Card key={slot.key}>
+                <CardContent className="p-4">
+                  <ImageUploader
+                    imageKey={slot.key}
+                    currentUrl={currentImages[slot.key]}
+                    pageSlug={slot.page}
+                    sectionKey={slot.key}
+                    label={slot.label}
+                    aspectRatio={slot.aspectRatio}
+                  />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         )}
       </div>
     );
   };
 
   if (isLoading) {
-    return <div className="flex justify-center py-8"><LoadingSpinner size="lg" /></div>;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Website Content</h2>
-          <p className="text-muted-foreground">Edit text, images, and content across all pages</p>
+          <h1 className="text-3xl font-bold">Content Management</h1>
+          <p className="text-muted-foreground">Edit all website content from a single place</p>
         </div>
-        
-        <div className="flex items-center gap-2">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'content' | 'images')}>
-            <TabsList>
-              <TabsTrigger value="content" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Content
-              </TabsTrigger>
-              <TabsTrigger value="images" className="flex items-center gap-2">
-                <ImageIcon className="h-4 w-4" />
-                Images
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-          
-          {activeTab === 'content' && (
+      </div>
+
+      {/* Page Selector */}
+      <div className="flex flex-wrap gap-2">
+        {Object.entries(PAGE_CONFIG).map(([key, config]) => {
+          const Icon = config.icon;
+          const pageContentCount = content?.filter(c => c.page_slug === key).length || 0;
+          return (
+            <Button
+              key={key}
+              variant={selectedPage === key ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedPage(key)}
+              className="gap-2"
+            >
+              <Icon className={`h-4 w-4 ${selectedPage === key ? '' : config.color}`} />
+              {config.label}
+              {pageContentCount > 0 && (
+                <span className="ml-1 text-xs bg-muted px-1.5 py-0.5 rounded-full">
+                  {pageContentCount}
+                </span>
+              )}
+            </Button>
+          );
+        })}
+      </div>
+
+      {/* Tabs for Content vs Images */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'content' | 'images')}>
+        <TabsList>
+          <TabsTrigger value="content" className="gap-2">
+            <FileText className="h-4 w-4" />
+            Content Sections
+          </TabsTrigger>
+          <TabsTrigger value="images" className="gap-2">
+            <ImageIcon className="h-4 w-4" />
+            Images
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="content" className="mt-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">
+              {PAGE_CONFIG[selectedPage as keyof typeof PAGE_CONFIG]?.label} Page Content
+            </h2>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button onClick={handleCreate}>
-                  <Plus className="h-4 w-4 mr-2" />
+                <Button onClick={handleCreate} className="gap-2">
+                  <Plus className="h-4 w-4" />
                   Add Section
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>{editingContent ? 'Edit Content Section' : 'Add Content Section'}</DialogTitle>
+                  <DialogTitle>
+                    {editingContent ? 'Edit Content Section' : 'Add New Content Section'}
+                  </DialogTitle>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Page</Label>
-                      <Select
-                        value={selectedPage}
-                        onValueChange={(value) => {
-                          setSelectedPage(value);
-                          setSelectedSection('');
-                          setFormFields({});
-                        }}
-                        disabled={!!editingContent}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(PAGE_CONFIG).map(([key, config]) => (
-                            <SelectItem key={key} value={key}>
-                              <span className="flex items-center gap-2">
-                                <config.icon className={`h-4 w-4 ${config.color}`} />
-                                {config.label}
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Section</Label>
-                      <Select
-                        value={selectedSection}
-                        onValueChange={(value) => {
-                          setSelectedSection(value);
-                          setFormFields({});
-                        }}
-                        disabled={!!editingContent}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select section..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {getAvailableSections().map(key => {
-                            const template = SECTION_TEMPLATES[selectedPage]?.[key];
-                            return (
-                              <SelectItem key={key} value={key}>
-                                {template?.label || key}
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label>Section Type</Label>
+                    <Select value={selectedSection} onValueChange={setSelectedSection}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a section..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getAvailableSections().map(key => (
+                          <SelectItem key={key} value={key}>
+                            {SECTION_TEMPLATES[selectedPage]?.[key]?.label || key}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-
-                  <Separator />
 
                   {selectedSection && (
                     <>
+                      <Separator />
                       {renderFormFields()}
                       
-                      <div className="flex items-center gap-2 pt-2">
+                      <div className="flex items-center gap-2">
                         <Switch
                           checked={isVisible}
                           onCheckedChange={setIsVisible}
@@ -612,149 +792,88 @@ export function AdminContent() {
                     </>
                   )}
                 </div>
+
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={handleSave} disabled={saveContent.isPending || !selectedSection}>
-                    {saveContent.isPending && <LoadingSpinner size="sm" className="mr-2" />}
-                    <Save className="h-4 w-4 mr-2" />
-                    {editingContent ? 'Update' : 'Create'}
+                  <Button onClick={handleSave} disabled={!selectedSection} className="gap-2">
+                    <Save className="h-4 w-4" />
+                    Save
                   </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-          )}
-        </div>
-      </div>
+          </div>
 
-      <Tabs value={selectedPage} onValueChange={setSelectedPage}>
-        <TabsList className="grid w-full grid-cols-6">
-          {Object.entries(PAGE_CONFIG).map(([key, config]) => (
-            <TabsTrigger key={key} value={key} className="flex items-center gap-2">
-              <config.icon className={`h-4 w-4 ${config.color}`} />
-              <span className="hidden sm:inline">{config.label}</span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        <TabsContent value={selectedPage} className="mt-6">
-          {activeTab === 'images' ? (
-            renderImageGallery()
+          {pageContent.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                No content sections found for this page. Click "Add Section" to get started.
+              </CardContent>
+            </Card>
           ) : (
-            <div className="grid gap-4">
-              {pageContent.length === 0 ? (
-                <Card>
-                  <CardContent className="py-12 text-center">
-                    <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No content sections</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Add content sections to customize this page
-                    </p>
-                    <Button onClick={handleCreate}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add First Section
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                pageContent.map((block) => {
-                  const template = SECTION_TEMPLATES[block.page_slug]?.[block.section_key];
-                  return (
-                    <Card key={block.id} className={!block.is_visible ? 'opacity-60 border-dashed' : ''}>
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <CardTitle className="text-lg flex items-center gap-2">
-                              {template?.label || block.section_key}
-                              {!block.is_visible && (
-                                <span className="text-xs bg-muted px-2 py-1 rounded">Hidden</span>
-                              )}
-                            </CardTitle>
-                            <CardDescription className="font-mono text-xs">
-                              {block.section_key}
-                            </CardDescription>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => toggleVisibility.mutate({ id: block.id, is_visible: !block.is_visible })}
-                              title={block.is_visible ? 'Hide section' : 'Show section'}
-                            >
-                              {block.is_visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleEdit(block)} title="Edit">
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                if (confirm('Delete this section? This cannot be undone.')) {
-                                  deleteContent.mutate(block.id);
-                                }
-                              }}
-                              title="Delete"
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
+            <div className="space-y-4">
+              {pageContent.map((block) => {
+                const template = SECTION_TEMPLATES[block.page_slug]?.[block.section_key];
+                return (
+                  <Card key={block.id} className={!block.is_visible ? 'opacity-60' : ''}>
+                    <CardHeader className="py-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            {template?.label || block.section_key}
+                            {!block.is_visible && (
+                              <span className="text-xs bg-muted px-2 py-1 rounded">Hidden</span>
+                            )}
+                          </CardTitle>
+                          <CardDescription>
+                            Section: {block.section_key} • Updated: {new Date(block.updated_at).toLocaleDateString()}
+                          </CardDescription>
                         </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="bg-muted/50 rounded-lg p-4">
-                          {template ? (
-                            <div className="grid gap-2 text-sm">
-                              {template.fields.map(field => {
-                                const value = field.type === 'array' 
-                                  ? JSON.stringify(block.content, null, 2)
-                                  : block.content[field.key];
-                                
-                                if (!value) return null;
-                                
-                                if (field.type === 'image' && value) {
-                                  return (
-                                    <div key={field.key} className="flex gap-2 items-start">
-                                      <span className="font-medium text-muted-foreground min-w-[120px]">
-                                        {field.label}:
-                                      </span>
-                                      <img 
-                                        src={value} 
-                                        alt={field.label}
-                                        className="h-16 w-auto object-cover rounded"
-                                      />
-                                    </div>
-                                  );
-                                }
-                                
-                                return (
-                                  <div key={field.key} className="flex gap-2">
-                                    <span className="font-medium text-muted-foreground min-w-[120px]">
-                                      {field.label}:
-                                    </span>
-                                    <span className={field.type === 'array' ? 'font-mono text-xs whitespace-pre' : 'text-foreground'}>
-                                      {typeof value === 'string' 
-                                        ? value.length > 100 ? `${value.substring(0, 100)}...` : value
-                                        : JSON.stringify(value)}
-                                    </span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          ) : (
-                            <pre className="text-xs font-mono overflow-x-auto">
-                              {JSON.stringify(block.content, null, 2)}
-                            </pre>
-                          )}
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => toggleVisibility.mutate({ id: block.id, is_visible: !block.is_visible })}
+                          >
+                            {block.is_visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEdit(block)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              if (confirm('Delete this section?')) {
+                                deleteContent.mutate(block.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })
-              )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <pre className="text-xs bg-muted p-3 rounded-md overflow-x-auto max-h-32">
+                        {JSON.stringify(block.content, null, 2)}
+                      </pre>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="images" className="mt-6">
+          {renderImageGallery()}
         </TabsContent>
       </Tabs>
     </div>

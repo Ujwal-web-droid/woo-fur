@@ -13,64 +13,9 @@ import {
 import { usePageContent } from "@/hooks/usePageContent";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const teamMembers = [
-  {
-    name: "Dr. Emily Chen",
-    role: "Founder & Director",
-    bio: "Veterinarian with 15 years of experience in animal therapy and rescue operations.",
-    avatar: "👩‍⚕️",
-  },
-  {
-    name: "Marcus Williams",
-    role: "Head of Therapy Programs",
-    bio: "Certified animal-assisted therapy specialist with a background in psychology.",
-    avatar: "👨‍🏫",
-  },
-  {
-    name: "Sofia Rodriguez",
-    role: "Animal Care Manager",
-    bio: "Dedicated animal welfare advocate overseeing the health of all our residents.",
-    avatar: "👩‍🔬",
-  },
-  {
-    name: "James Thompson",
-    role: "Volunteer Coordinator",
-    bio: "Community organizer passionate about connecting people with meaningful causes.",
-    avatar: "👨‍💼",
-  },
-];
-
-const milestones = [
-  { year: "2018", title: "Foundation", description: "Woo-Fur was founded with just 5 rescue animals and a dream." },
-  { year: "2019", title: "First Therapy Program", description: "Launched our certified animal therapy program." },
-  { year: "2020", title: "Virtual Sessions", description: "Adapted to provide online therapy sessions during challenging times." },
-  { year: "2021", title: "New Facility", description: "Opened our expanded sanctuary with room for 100+ animals." },
-  { year: "2022", title: "Part-time Pets", description: "Introduced our innovative Part-time Pets program." },
-  { year: "2023", title: "500+ Rescues", description: "Celebrated rescuing and rehoming over 500 animals." },
-];
-
-const values = [
-  {
-    icon: Heart,
-    title: "Compassion First",
-    description: "Every decision we make is guided by love and care for both animals and humans.",
-  },
-  {
-    icon: Target,
-    title: "Purpose-Driven",
-    description: "We believe every animal has a purpose in bringing joy and healing to others.",
-  },
-  {
-    icon: Users,
-    title: "Community Focus",
-    description: "Building strong connections between animals, volunteers, and those we serve.",
-  },
-  {
-    icon: Sparkles,
-    title: "Continuous Growth",
-    description: "Always learning, improving, and expanding our impact in the community.",
-  },
-];
+const iconMap: Record<string, React.ElementType> = {
+  Heart, Target, Users, Sparkles, Eye, Award, Calendar, PawPrint
+};
 
 interface HeroContent {
   title: string;
@@ -88,6 +33,43 @@ interface MissionContent {
   missionText: string;
   visionTitle: string;
   visionText: string;
+}
+
+interface TeamContent {
+  title: string;
+  description: string;
+  members: Array<{
+    name: string;
+    role: string;
+    bio: string;
+    avatar: string;
+  }>;
+}
+
+interface MilestonesContent {
+  title: string;
+  description: string;
+  items: Array<{
+    year: string;
+    title: string;
+    description: string;
+  }>;
+}
+
+interface ValuesContent {
+  title: string;
+  description: string;
+  items: Array<{
+    icon: string;
+    title: string;
+    description: string;
+  }>;
+}
+
+interface AwardsContent {
+  items: Array<{
+    title: string;
+  }>;
 }
 
 const About = () => {
@@ -109,6 +91,49 @@ const About = () => {
     missionText: "To rescue animals in need and connect them with humans seeking therapeutic companionship, creating healing experiences that transform lives on both ends of the leash.",
     visionTitle: "Our Vision",
     visionText: "A world where every rescued animal has the opportunity to heal and be healed, where the bond between species creates lasting positive change in communities."
+  });
+
+  const team = getSection<TeamContent>('team', {
+    title: "Meet Our Team",
+    description: "Dedicated professionals who make Woo-Fur's mission possible every day.",
+    members: [
+      { name: "Dr. Emily Chen", role: "Founder & Director", bio: "Veterinarian with 15 years of experience in animal therapy and rescue operations.", avatar: "👩‍⚕️" },
+      { name: "Marcus Williams", role: "Head of Therapy Programs", bio: "Certified animal-assisted therapy specialist with a background in psychology.", avatar: "👨‍🏫" },
+      { name: "Sofia Rodriguez", role: "Animal Care Manager", bio: "Dedicated animal welfare advocate overseeing the health of all our residents.", avatar: "👩‍🔬" },
+      { name: "James Thompson", role: "Volunteer Coordinator", bio: "Community organizer passionate about connecting people with meaningful causes.", avatar: "👨‍💼" },
+    ]
+  });
+
+  const milestones = getSection<MilestonesContent>('milestones', {
+    title: "Our Journey",
+    description: "Key milestones that shaped Woo-Fur into what it is today.",
+    items: [
+      { year: "2018", title: "Foundation", description: "Woo-Fur was founded with just 5 rescue animals and a dream." },
+      { year: "2019", title: "First Therapy Program", description: "Launched our certified animal therapy program." },
+      { year: "2020", title: "Virtual Sessions", description: "Adapted to provide online therapy sessions during challenging times." },
+      { year: "2021", title: "New Facility", description: "Opened our expanded sanctuary with room for 100+ animals." },
+      { year: "2022", title: "Part-time Pets", description: "Introduced our innovative Part-time Pets program." },
+      { year: "2023", title: "500+ Rescues", description: "Celebrated rescuing and rehoming over 500 animals." },
+    ]
+  });
+
+  const values = getSection<ValuesContent>('values', {
+    title: "Our Core Values",
+    description: "The principles that guide everything we do at Woo-Fur.",
+    items: [
+      { icon: "Heart", title: "Compassion First", description: "Every decision we make is guided by love and care for both animals and humans." },
+      { icon: "Target", title: "Purpose-Driven", description: "We believe every animal has a purpose in bringing joy and healing to others." },
+      { icon: "Users", title: "Community Focus", description: "Building strong connections between animals, volunteers, and those we serve." },
+      { icon: "Sparkles", title: "Continuous Growth", description: "Always learning, improving, and expanding our impact in the community." },
+    ]
+  });
+
+  const awards = getSection<AwardsContent>('awards', {
+    items: [
+      { title: "Best Animal Therapy Program 2023" },
+      { title: "Community Impact Award" },
+      { title: "Non-Profit Excellence" },
+    ]
   });
 
   return (
@@ -178,13 +203,10 @@ const About = () => {
                 <div className="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center">
                   <Target className="h-6 w-6 text-accent" />
                 </div>
-                <h2 className="font-heading text-2xl font-bold">Our Mission</h2>
+                <h2 className="font-heading text-2xl font-bold">{mission.missionTitle}</h2>
               </div>
               <p className="text-background/80 leading-relaxed">
-                To rescue and rehabilitate animals while creating meaningful therapeutic 
-                connections that heal both human and animal hearts. We believe in the 
-                transformative power of the human-animal bond and work tirelessly to 
-                make these connections accessible to everyone.
+                {mission.missionText}
               </p>
             </div>
             
@@ -193,13 +215,10 @@ const About = () => {
                 <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
                   <Eye className="h-6 w-6 text-primary" />
                 </div>
-                <h2 className="font-heading text-2xl font-bold">Our Vision</h2>
+                <h2 className="font-heading text-2xl font-bold">{mission.visionTitle}</h2>
               </div>
               <p className="text-background/80 leading-relaxed">
-                A world where every rescued animal has the opportunity to become a 
-                healer, and every person in need can experience the unconditional 
-                love and comfort that only an animal companion can provide. We envision 
-                communities transformed by compassion.
+                {mission.visionText}
               </p>
             </div>
           </div>
@@ -211,25 +230,28 @@ const About = () => {
         <div className="container-app">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">
-              Our Core Values
+              {values.title}
             </h2>
             <p className="text-muted-foreground">
-              The principles that guide everything we do at Woo-Fur.
+              {values.description}
             </p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {values.map((value) => (
-              <Card key={value.title} className="text-center card-hover">
-                <CardContent className="pt-8 pb-6">
-                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <value.icon className="h-7 w-7 text-primary" />
-                  </div>
-                  <h3 className="font-heading font-semibold text-lg mb-2">{value.title}</h3>
-                  <p className="text-sm text-muted-foreground">{value.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+            {values.items.map((value) => {
+              const IconComponent = iconMap[value.icon] || Heart;
+              return (
+                <Card key={value.title} className="text-center card-hover">
+                  <CardContent className="pt-8 pb-6">
+                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                      <IconComponent className="h-7 w-7 text-primary" />
+                    </div>
+                    <h3 className="font-heading font-semibold text-lg mb-2">{value.title}</h3>
+                    <p className="text-sm text-muted-foreground">{value.description}</p>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -239,15 +261,15 @@ const About = () => {
         <div className="container-app">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">
-              Meet Our Team
+              {team.title}
             </h2>
             <p className="text-muted-foreground">
-              Dedicated professionals who make Woo-Fur's mission possible every day.
+              {team.description}
             </p>
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {teamMembers.map((member) => (
+            {team.members.map((member) => (
               <Card key={member.name} className="overflow-hidden card-hover">
                 <div className="aspect-square bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
                   <span className="text-7xl">{member.avatar}</span>
@@ -268,10 +290,10 @@ const About = () => {
         <div className="container-app">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">
-              Our Journey
+              {milestones.title}
             </h2>
             <p className="text-muted-foreground">
-              Key milestones that shaped Woo-Fur into what it is today.
+              {milestones.description}
             </p>
           </div>
 
@@ -280,7 +302,7 @@ const About = () => {
               {/* Timeline line */}
               <div className="absolute left-[22px] md:left-1/2 md:-translate-x-px top-0 bottom-0 w-0.5 bg-border" />
               
-              {milestones.map((milestone, index) => (
+              {milestones.items.map((milestone, index) => (
                 <div 
                   key={milestone.year}
                   className={`relative flex gap-6 md:gap-0 mb-8 ${
@@ -317,18 +339,12 @@ const About = () => {
       <section className="py-12 bg-muted">
         <div className="container-app">
           <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16">
-            <div className="flex items-center gap-3">
-              <Award className="h-8 w-8 text-accent" />
-              <span className="font-medium text-muted-foreground">Best Animal Therapy Program 2023</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Award className="h-8 w-8 text-primary" />
-              <span className="font-medium text-muted-foreground">Community Impact Award</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Award className="h-8 w-8 text-accent" />
-              <span className="font-medium text-muted-foreground">Non-Profit Excellence</span>
-            </div>
+            {awards.items.map((award, index) => (
+              <div key={index} className="flex items-center gap-3">
+                <Award className={`h-8 w-8 ${index % 2 === 0 ? 'text-accent' : 'text-primary'}`} />
+                <span className="font-medium text-muted-foreground">{award.title}</span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
