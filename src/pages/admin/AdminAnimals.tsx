@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAnimals } from '@/hooks/useAnimals';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Upload, Image, X } from 'lucide-react';
 
 interface AnimalFormData {
   name: string;
@@ -25,6 +25,7 @@ interface AnimalFormData {
   biography: string;
   availability_status: string;
   adoption_status: string;
+  photos: string[];
 }
 
 const defaultFormData: AnimalFormData = {
@@ -37,6 +38,7 @@ const defaultFormData: AnimalFormData = {
   biography: '',
   availability_status: 'available',
   adoption_status: 'not_available',
+  photos: [],
 };
 
 export function AdminAnimals() {
@@ -47,6 +49,8 @@ export function AdminAnimals() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<AnimalFormData>(defaultFormData);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleEdit = (animal: any) => {
     setEditingId(animal.id);
@@ -60,6 +64,7 @@ export function AdminAnimals() {
       biography: animal.biography || '',
       availability_status: animal.availability_status || 'available',
       adoption_status: animal.adoption_status || 'not_available',
+      photos: animal.photos || [],
     });
     setIsDialogOpen(true);
   };
@@ -68,6 +73,42 @@ export function AdminAnimals() {
     setEditingId(null);
     setFormData(defaultFormData);
     setIsDialogOpen(true);
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `animal-${Date.now()}.${fileExt}`;
+      const filePath = `animals/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('website-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from('website-images')
+        .getPublicUrl(filePath);
+
+      const newPhotos = [...formData.photos, publicUrlData.publicUrl];
+      setFormData({ ...formData, photos: newPhotos });
+      toast({ title: 'Photo uploaded successfully' });
+    } catch (error: any) {
+      toast({ title: 'Error uploading photo', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemovePhoto = (index: number) => {
+    const newPhotos = formData.photos.filter((_, i) => i !== index);
+    setFormData({ ...formData, photos: newPhotos });
   };
 
   const handleSave = async () => {
@@ -238,6 +279,44 @@ export function AdminAnimals() {
                   rows={4}
                 />
               </div>
+
+              {/* Photo Management */}
+              <div className="space-y-3">
+                <Label>Photos</Label>
+                <div className="grid grid-cols-3 gap-3">
+                  {formData.photos.map((photo, index) => (
+                    <div key={index} className="relative group aspect-square rounded-lg overflow-hidden border">
+                      <img src={photo} alt={`Photo ${index + 1}`} className="w-full h-full object-cover" />
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleRemovePhoto(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                  <label className="aspect-square rounded-lg border-2 border-dashed flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                    />
+                    {isUploading ? (
+                      <LoadingSpinner size="sm" />
+                    ) : (
+                      <>
+                        <Upload className="h-6 w-6 text-muted-foreground mb-1" />
+                        <span className="text-xs text-muted-foreground">Add Photo</span>
+                      </>
+                    )}
+                  </label>
+                </div>
+              </div>
+
               <Button onClick={handleSave} disabled={isSaving}>
                 {isSaving ? <LoadingSpinner size="sm" className="mr-2" /> : null}
                 {editingId ? 'Update Animal' : 'Create Animal'}

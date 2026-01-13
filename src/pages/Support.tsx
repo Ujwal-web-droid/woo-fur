@@ -18,8 +18,50 @@ import { useToast } from "@/hooks/use-toast";
 import { useCreateDonation, useDonationImpact } from "@/hooks/useDonations";
 import { usePayment } from "@/hooks/usePayment";
 import { useAuth } from "@/context/AuthContext";
+import { usePageContent } from "@/hooks/usePageContent";
 
-const donationAmounts = [25, 50, 100, 250, 500, 1000];
+interface HeroContent {
+  badge: string;
+  title: string;
+  titleHighlight: string;
+  description: string;
+}
+
+interface DonationFormContent {
+  title: string;
+  selectAmountLabel: string;
+  customAmountLabel: string;
+  customAmountPlaceholder: string;
+  impactTitle: string;
+  guestInfoTitle: string;
+  recurringLabel: string;
+  recurringDescription: string;
+  allocationLabel: string;
+  submitText: string;
+  securityNote: string;
+}
+
+interface SidebarContent {
+  fundTitle: string;
+  whyDonateTitle: string;
+  whyDonateItems: string[];
+  testimonialText: string;
+  testimonialAuthor: string;
+}
+
+interface CorporateContent {
+  title: string;
+  description: string;
+  items: { title: string; description: string }[];
+}
+
+interface ImpactStatsContent {
+  title: string;
+  description: string;
+  stats: { value: string; label: string }[];
+}
+
+const defaultDonationAmounts = [25, 50, 100, 250, 500, 1000];
 
 const Support = () => {
   const { toast } = useToast();
@@ -110,6 +152,60 @@ const Support = () => {
   const totalRaised = donationImpactData?.total_raised || 0;
   const donorCount = donationImpactData?.donor_count || 0;
 
+  const { getSection, getSectionList } = usePageContent('support');
+
+  const hero = getSection<HeroContent>('hero', {
+    badge: "Support Our Mission",
+    title: "Help Us",
+    titleHighlight: "Heal More Lives",
+    description: "Your generosity enables us to rescue, rehabilitate, and provide therapy services to those who need it most. Every donation makes a difference."
+  });
+
+  const donationForm = getSection<DonationFormContent>('donation_form', {
+    title: "Make a Donation",
+    selectAmountLabel: "Select Amount",
+    customAmountLabel: "Custom Amount",
+    customAmountPlaceholder: "Enter amount",
+    impactTitle: "Your Impact",
+    guestInfoTitle: "Your Information",
+    recurringLabel: "Make it Monthly",
+    recurringDescription: "Recurring donations provide stable support",
+    allocationLabel: "Donation Allocation",
+    submitText: "Donate",
+    securityNote: "Secure payment processed by PhonePe"
+  });
+
+  const sidebar = getSection<SidebarContent>('sidebar', {
+    fundTitle: "Rehabilitation Fund",
+    whyDonateTitle: "Your Support Funds",
+    whyDonateItems: ["Medical care & surgeries", "Food & supplies for 50+ animals", "Therapy program operations", "Facility maintenance", "Staff & volunteer training"],
+    testimonialText: "Knowing my monthly donation helps animals like Coco recover is incredibly rewarding. I feel connected to the mission.",
+    testimonialAuthor: "— Lisa T., Monthly Donor"
+  });
+
+  const corporate = getSection<CorporateContent>('corporate', {
+    title: "Corporate Partnerships",
+    description: "Partner with Woo-Fur to make a lasting impact. We offer sponsorship opportunities, employee engagement programs, and cause marketing partnerships.",
+    items: [
+      { title: "Sponsorship", description: "Sponsor a program, event, or animal rehabilitation" },
+      { title: "Employee Engagement", description: "Volunteer days and team-building activities" },
+      { title: "Cause Marketing", description: "Co-branded campaigns that give back" }
+    ]
+  });
+
+  const impactStats = getSection<ImpactStatsContent>('impact_stats', {
+    title: "Our Impact Together",
+    description: "Thanks to donors like you, we've been able to make a real difference",
+    stats: [
+      { value: "500+", label: "Animals Rescued" },
+      { value: "1,200+", label: "Therapy Sessions" },
+      { value: "95%", label: "Successful Adoptions" },
+      { value: "$250K+", label: "Raised Annually" }
+    ]
+  });
+
+  const donationAmounts = defaultDonationAmounts;
+
   return (
     <Layout>
       {/* Hero */}
@@ -118,14 +214,13 @@ const Support = () => {
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
               <Heart className="h-4 w-4" />
-              <span>Support Our Mission</span>
+              <span>{hero.badge}</span>
             </div>
             <h1 className="font-heading text-4xl md:text-5xl font-bold mb-6">
-              Help Us <span className="text-gradient">Heal More Lives</span>
+              {hero.title} <span className="text-gradient">{hero.titleHighlight}</span>
             </h1>
             <p className="text-lg text-muted-foreground">
-              Your generosity enables us to rescue, rehabilitate, and provide therapy services 
-              to those who need it most. Every donation makes a difference.
+              {hero.description}
             </p>
             {totalRaised > 0 && (
               <div className="mt-6 inline-flex items-center gap-4 px-6 py-3 bg-card rounded-full shadow-sm">

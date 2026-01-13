@@ -17,13 +17,54 @@ import {
 import { animals, timeSlots } from "@/data/mockData";
 import { useBooking } from "@/context/BookingContext";
 import { useToast } from "@/hooks/use-toast";
+import { usePageContent } from "@/hooks/usePageContent";
 
-const serviceTypes = [
+interface HeroContent {
+  badge: string;
+  title: string;
+  titleHighlight: string;
+  description: string;
+}
+
+interface ServiceType {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  duration: string;
+  price: string;
+}
+
+interface StepLabels {
+  serviceType: string;
+  dateTime: string;
+  animalSelection: string;
+  yourDetails: string;
+  review: string;
+}
+
+interface FormLabels {
+  chooseExperience: string;
+  selectDateTime: string;
+  pickDate: string;
+  availableTimes: string;
+  chooseAnimal: string;
+  meetAllAnimals: string;
+  contactInfo: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  specialRequirements: string;
+  reviewBooking: string;
+  confirmBooking: string;
+}
+
+const defaultServiceTypes: ServiceType[] = [
   {
     id: "therapy",
     title: "Therapy Session",
     description: "One-on-one or group sessions with certified therapy animals",
-    icon: Heart,
+    icon: "heart",
     duration: "60 min",
     price: "$75"
   },
@@ -31,7 +72,7 @@ const serviceTypes = [
     id: "visit",
     title: "Facility Visit",
     description: "Tour our facility and meet our resident animals",
-    icon: Users,
+    icon: "users",
     duration: "45 min",
     price: "Free"
   },
@@ -39,13 +80,13 @@ const serviceTypes = [
     id: "part-time-pet",
     title: "Part-time Pet",
     description: "Take a companion animal home for a weekend",
-    icon: PawPrint,
+    icon: "paw",
     duration: "Weekend",
     price: "$50"
   }
 ];
 
-const steps = [
+const defaultSteps = [
   { id: 1, title: "Service Type" },
   { id: 2, title: "Date & Time" },
   { id: 3, title: "Animal Selection" },
@@ -132,8 +173,47 @@ const Booking = () => {
     setIsSubmitting(false);
   };
 
+
+  const { getSection, getSectionList } = usePageContent('booking');
+
+  const hero = getSection<HeroContent>('hero', {
+    badge: "Book Your Experience",
+    title: "Schedule Your",
+    titleHighlight: "Healing Session",
+    description: "Choose a service, pick a date, and let us connect you with the perfect animal companion."
+  });
+
+  const formLabels = getSection<FormLabels>('form_labels', {
+    chooseExperience: "Choose Your Experience",
+    selectDateTime: "Select Date & Time",
+    pickDate: "Pick a Date",
+    availableTimes: "Available Times",
+    chooseAnimal: "Choose Your Animal Companion",
+    meetAllAnimals: "You'll Meet All Our Animals!",
+    contactInfo: "Your Contact Information",
+    fullName: "Full Name *",
+    email: "Email Address *",
+    phone: "Phone Number *",
+    specialRequirements: "Special Requirements",
+    reviewBooking: "Review Your Booking",
+    confirmBooking: "Confirm Booking"
+  });
+
+  const serviceTypesFromDb = getSectionList<ServiceType>('service_types');
+  const serviceTypes = serviceTypesFromDb.length > 0 ? serviceTypesFromDb : defaultServiceTypes;
+  const steps = defaultSteps;
+
   const selectedService = serviceTypes.find(s => s.id === bookingData.serviceType);
   const selectedAnimal = animals.find(a => a.id === bookingData.selectedAnimalId);
+
+  const getServiceIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'heart': return Heart;
+      case 'users': return Users;
+      case 'paw': return PawPrint;
+      default: return Heart;
+    }
+  };
 
   return (
     <Layout>
@@ -143,13 +223,13 @@ const Booking = () => {
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
               <Sparkles className="h-4 w-4" />
-              <span>Book Your Experience</span>
+              <span>{hero.badge}</span>
             </div>
             <h1 className="font-heading text-4xl md:text-5xl font-bold mb-6">
-              Schedule Your <span className="text-gradient">Healing Session</span>
+              {hero.title} <span className="text-gradient">{hero.titleHighlight}</span>
             </h1>
             <p className="text-lg text-muted-foreground">
-              Choose a service, pick a date, and let us connect you with the perfect animal companion.
+              {hero.description}
             </p>
           </div>
         </div>
@@ -204,7 +284,7 @@ const Booking = () => {
                 </h2>
                 <div className="grid md:grid-cols-3 gap-6">
                   {serviceTypes.map((service) => {
-                    const Icon = service.icon;
+                    const ServiceIcon = getServiceIcon(service.icon);
                     return (
                       <Card
                         key={service.id}
@@ -218,7 +298,7 @@ const Booking = () => {
                       >
                         <CardContent className="p-6 text-center">
                           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                            <Icon className="h-8 w-8 text-primary" />
+                            <ServiceIcon className="h-8 w-8 text-primary" />
                           </div>
                           <h3 className="font-heading font-semibold text-lg mb-2">
                             {service.title}
