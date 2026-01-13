@@ -18,6 +18,33 @@ import {
 import { faqs } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { usePageContent } from "@/hooks/usePageContent";
+
+interface HeroContent {
+  badge: string;
+  title: string;
+  titleHighlight: string;
+  description: string;
+  searchPlaceholder: string;
+}
+
+interface AskFormContent {
+  title: string;
+  description: string;
+  buttonText: string;
+  nameLabel: string;
+  emailLabel: string;
+  questionLabel: string;
+  submitText: string;
+  cancelText: string;
+}
+
+interface TopicContent {
+  icon: string;
+  title: string;
+  link: string;
+  description: string;
+}
 
 const categoryIcons: { [key: string]: React.ElementType } = {
   therapy: Heart,
@@ -29,7 +56,7 @@ const categoryIcons: { [key: string]: React.ElementType } = {
   general: HelpCircle,
 };
 
-const categories = [
+const defaultCategories = [
   { id: "all", label: "All Questions" },
   { id: "therapy", label: "Therapy" },
   { id: "rescue", label: "Rescue & Adoption" },
@@ -95,6 +122,52 @@ const FAQ = () => {
       .slice(0, 2);
   };
 
+  const { getSection, getSectionList } = usePageContent('faq');
+
+  const hero = getSection<HeroContent>('hero', {
+    badge: "Help Center",
+    title: "Frequently Asked",
+    titleHighlight: "Questions",
+    description: "Find answers to common questions about our programs, services, and how to get involved.",
+    searchPlaceholder: "Search for answers..."
+  });
+
+  const askForm = getSection<AskFormContent>('ask_form', {
+    title: "Didn't Find Your Answer?",
+    description: "We're here to help! Send us your question and we'll get back to you.",
+    buttonText: "Ask a Question",
+    nameLabel: "Your Name *",
+    emailLabel: "Email Address *",
+    questionLabel: "Your Question *",
+    submitText: "Send Question",
+    cancelText: "Cancel"
+  });
+
+  const popularTopicsTitle = getSection<{ title: string }>('popular_topics', { title: "Popular Topics" }).title;
+
+  const defaultTopics: TopicContent[] = [
+    { icon: "heart", title: "Therapy Sessions", link: "/programs/therapy", description: "Learn about our certified therapy animals" },
+    { icon: "paw", title: "Adoption Process", link: "/programs/rescue", description: "How to adopt one of our animals" },
+    { icon: "calendar", title: "Book a Visit", link: "/booking", description: "Schedule your experience" },
+    { icon: "dollar", title: "Support Us", link: "/support", description: "Ways to donate and help" }
+  ];
+
+  const popularTopics = getSectionList<TopicContent>('popular_topics_items').length > 0 
+    ? getSectionList<TopicContent>('popular_topics_items') 
+    : defaultTopics;
+
+  const categories = defaultCategories;
+
+  const getTopicIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'heart': return Heart;
+      case 'paw': return PawPrint;
+      case 'calendar': return Calendar;
+      case 'dollar': return DollarSign;
+      default: return HelpCircle;
+    }
+  };
+
   return (
     <Layout>
       {/* Hero */}
@@ -103,13 +176,13 @@ const FAQ = () => {
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
               <HelpCircle className="h-4 w-4" />
-              <span>Help Center</span>
+              <span>{hero.badge}</span>
             </div>
             <h1 className="font-heading text-4xl md:text-5xl font-bold mb-6">
-              Frequently Asked <span className="text-gradient">Questions</span>
+              {hero.title} <span className="text-gradient">{hero.titleHighlight}</span>
             </h1>
             <p className="text-lg text-muted-foreground mb-8">
-              Find answers to common questions about our programs, services, and how to get involved.
+              {hero.description}
             </p>
             
             {/* Search Bar */}
@@ -117,7 +190,7 @@ const FAQ = () => {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search for answers..."
+                placeholder={hero.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-12 h-14 text-lg"
@@ -230,14 +303,14 @@ const FAQ = () => {
               <CardContent className="py-8 text-center">
                 <MessageSquare className="h-10 w-10 text-primary mx-auto mb-4" />
                 <h3 className="font-heading text-xl font-bold mb-2">
-                  Didn't Find Your Answer?
+                  {askForm.title}
                 </h3>
                 <p className="text-muted-foreground mb-6">
-                  We're here to help! Send us your question and we'll get back to you.
+                  {askForm.description}
                 </p>
                 <Button onClick={() => setShowAskForm(!showAskForm)} className="gap-2">
                   <MessageSquare className="h-4 w-4" />
-                  {showAskForm ? "Hide Form" : "Ask a Question"}
+                  {showAskForm ? "Hide Form" : askForm.buttonText}
                 </Button>
               </CardContent>
             </Card>
@@ -249,7 +322,7 @@ const FAQ = () => {
                   <form onSubmit={handleAskQuestion} className="space-y-4">
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="name">Your Name *</Label>
+                        <Label htmlFor="name">{askForm.nameLabel}</Label>
                         <Input
                           id="name"
                           value={questionForm.name}
@@ -258,7 +331,7 @@ const FAQ = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="email">Email Address *</Label>
+                        <Label htmlFor="email">{askForm.emailLabel}</Label>
                         <Input
                           id="email"
                           type="email"
@@ -269,7 +342,7 @@ const FAQ = () => {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="question">Your Question *</Label>
+                      <Label htmlFor="question">{askForm.questionLabel}</Label>
                       <Textarea
                         id="question"
                         value={questionForm.question}
@@ -281,11 +354,11 @@ const FAQ = () => {
                     </div>
                     <div className="flex justify-end gap-3">
                       <Button type="button" variant="outline" onClick={() => setShowAskForm(false)}>
-                        Cancel
+                        {askForm.cancelText}
                       </Button>
                       <Button type="submit" className="gap-2">
                         <Send className="h-4 w-4" />
-                        Send Question
+                        {askForm.submitText}
                       </Button>
                     </div>
                   </form>
@@ -300,26 +373,24 @@ const FAQ = () => {
       <section className="section-padding bg-card border-t">
         <div className="container-app">
           <h2 className="font-heading text-2xl font-bold text-center mb-8">
-            Popular Topics
+            {popularTopicsTitle}
           </h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { icon: Heart, title: "Therapy Sessions", link: "/programs/therapy", description: "Learn about our certified therapy animals" },
-              { icon: PawPrint, title: "Adoption Process", link: "/programs/rescue", description: "How to adopt one of our animals" },
-              { icon: Calendar, title: "Book a Visit", link: "/booking", description: "Schedule your experience" },
-              { icon: DollarSign, title: "Support Us", link: "/support", description: "Ways to donate and help" }
-            ].map((topic, index) => (
-              <Card key={index} className="card-hover">
-                <CardContent className="p-6">
-                  <topic.icon className="h-8 w-8 text-primary mb-3" />
-                  <h3 className="font-heading font-semibold mb-1">{topic.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-3">{topic.description}</p>
-                  <Button variant="link" className="p-0 h-auto" asChild>
-                    <a href={topic.link}>Learn more →</a>
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+            {popularTopics.map((topic, index) => {
+              const TopicIcon = getTopicIcon(topic.icon);
+              return (
+                <Card key={index} className="card-hover">
+                  <CardContent className="p-6">
+                    <TopicIcon className="h-8 w-8 text-primary mb-3" />
+                    <h3 className="font-heading font-semibold mb-1">{topic.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-3">{topic.description}</p>
+                    <Button variant="link" className="p-0 h-auto" asChild>
+                      <a href={topic.link}>Learn more →</a>
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>

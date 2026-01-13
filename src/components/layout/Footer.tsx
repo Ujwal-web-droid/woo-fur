@@ -17,8 +17,23 @@ interface CopyrightContent {
   text: string;
 }
 
+interface QuickLinkItem {
+  label: string;
+  path: string;
+}
+
+interface ProgramLinkItem {
+  label: string;
+  path: string;
+}
+
+interface SocialLink {
+  platform: string;
+  url: string;
+}
+
 export const Footer = () => {
-  const { getSection } = usePageContent('footer');
+  const { getSection, getSectionList } = usePageContent('footer');
 
   const brand = getSection<BrandContent>('brand', {
     tagline: "Connecting healing animals with humans through therapeutic interactions. Every paw print leaves a lasting impact."
@@ -33,6 +48,31 @@ export const Footer = () => {
   const copyright = getSection<CopyrightContent>('copyright', {
     text: "Made with love for healing animals"
   });
+
+  const quickLinksTitle = getSection<{ title: string }>('quick_links', { title: "Quick Links" }).title;
+  const programsTitle = getSection<{ title: string }>('programs_links', { title: "Our Programs" }).title;
+  const contactTitle = getSection<{ title: string }>('contact_title', { title: "Contact Us" }).title;
+
+  const defaultQuickLinks: QuickLinkItem[] = [
+    { label: "Home", path: "/" },
+    { label: "Animals", path: "/animals" },
+    { label: "Programs", path: "/programs" },
+    { label: "Stories", path: "/stories" },
+    { label: "About Us", path: "/about" }
+  ];
+
+  const defaultProgramLinks: ProgramLinkItem[] = [
+    { label: "Animal Rescue", path: "/programs/rescue" },
+    { label: "Rehabilitation", path: "/programs/rehabilitation" },
+    { label: "Therapy Sessions", path: "/programs/therapy" },
+    { label: "Part-time Pets", path: "/programs/part-time-pets" }
+  ];
+
+  const quickLinksFromDb = getSectionList<QuickLinkItem>('quick_links_items');
+  const programLinksFromDb = getSectionList<ProgramLinkItem>('program_links_items');
+
+  const quickLinks = quickLinksFromDb.length > 0 ? quickLinksFromDb : defaultQuickLinks;
+  const programLinks = programLinksFromDb.length > 0 ? programLinksFromDb : defaultProgramLinks;
 
   return (
     <footer className="bg-foreground text-background pb-20 md:pb-0">
@@ -66,15 +106,15 @@ export const Footer = () => {
 
           {/* Quick Links */}
           <div className="space-y-4">
-            <h4 className="font-heading font-semibold">Quick Links</h4>
+            <h4 className="font-heading font-semibold">{quickLinksTitle}</h4>
             <ul className="space-y-2">
-              {["Home", "Animals", "Programs", "Stories", "About Us"].map((item) => (
-                <li key={item}>
+              {quickLinks.map((item, index) => (
+                <li key={index}>
                   <Link 
-                    to={`/${item === "Home" ? "" : item === "About Us" ? "about" : item.toLowerCase()}`}
+                    to={item.path}
                     className="text-sm text-background/70 hover:text-background transition-colors"
                   >
-                    {item}
+                    {item.label}
                   </Link>
                 </li>
               ))}
@@ -83,12 +123,12 @@ export const Footer = () => {
 
           {/* Programs */}
           <div className="space-y-4">
-            <h4 className="font-heading font-semibold">Our Programs</h4>
+            <h4 className="font-heading font-semibold">{programsTitle}</h4>
             <ul className="space-y-2">
-              {["Animal Rescue", "Rehabilitation", "Therapy Sessions", "Part-time Pets"].map((item) => (
-                <li key={item}>
-                  <Link to="/programs" className="text-sm text-background/70 hover:text-background transition-colors">
-                    {item}
+              {programLinks.map((item, index) => (
+                <li key={index}>
+                  <Link to={item.path} className="text-sm text-background/70 hover:text-background transition-colors">
+                    {item.label}
                   </Link>
                 </li>
               ))}
@@ -97,7 +137,7 @@ export const Footer = () => {
 
           {/* Contact */}
           <div className="space-y-4">
-            <h4 className="font-heading font-semibold">Contact Us</h4>
+            <h4 className="font-heading font-semibold">{contactTitle}</h4>
             <ul className="space-y-3">
               <li className="flex items-start gap-3 text-sm text-background/70">
                 <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
