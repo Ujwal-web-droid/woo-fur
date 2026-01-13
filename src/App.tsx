@@ -39,6 +39,7 @@ import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { AdminAnimals } from "./pages/admin/AdminAnimals";
 import { AdminPrograms } from "./pages/admin/AdminPrograms";
 import { AdminBookings } from "./pages/admin/AdminBookings";
+import { AdminStories } from "./pages/admin/AdminStories";
 import { AdminUsers } from "./pages/admin/AdminUsers";
 import { AdminContent } from "./pages/admin/AdminContent";
 import { AdminSettings } from "./pages/admin/AdminSettings";
@@ -94,6 +95,7 @@ const App = () => (
                 <Route path="animals" element={<AdminAnimals />} />
                 <Route path="programs" element={<AdminPrograms />} />
                 <Route path="bookings" element={<AdminBookings />} />
+                <Route path="stories" element={<AdminStories />} />
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="content" element={<AdminContent />} />
                 <Route path="settings" element={<AdminSettings />} />
