@@ -16,6 +16,7 @@ import {
   ChevronRight,
   LogOut,
   Home,
+  BookOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -24,6 +25,7 @@ const navItems = [
   { label: 'Animals', icon: PawPrint, path: '/admin/animals' },
   { label: 'Programs', icon: Layers, path: '/admin/programs' },
   { label: 'Bookings', icon: Calendar, path: '/admin/bookings' },
+  { label: 'Stories', icon: BookOpen, path: '/admin/stories' },
   { label: 'Users', icon: Users, path: '/admin/users' },
   { label: 'Content', icon: FileText, path: '/admin/content' },
   { label: 'Settings', icon: Settings, path: '/admin/settings' },
