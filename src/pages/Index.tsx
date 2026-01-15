@@ -16,51 +16,11 @@ import {
 import { usePageContent } from "@/hooks/usePageContent";
 import { useWebsiteImages } from "@/hooks/useWebsiteImages";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAnimals } from "@/hooks/useAnimals";
 
-// Default animal images (fallback)
-import lunaImg from "@/assets/animals/luna-golden-retriever.jpg";
-import oliverImg from "@/assets/animals/oliver-tabby-cat.jpg";
-import daisyImg from "@/assets/animals/daisy-rabbit.jpg";
-
-const defaultPrograms = [
-  {
-    icon: Heart,
-    title: "Animal Rescue",
-    description: "Saving animals in need and giving them a second chance at a loving life.",
-    color: "bg-accent/10 text-accent",
-  },
-  {
-    icon: Sparkles,
-    title: "Rehabilitation",
-    description: "Medical care and emotional healing for animals recovering from trauma.",
-    color: "bg-primary/10 text-primary",
-  },
-  {
-    icon: Users,
-    title: "Therapy Sessions",
-    description: "Certified therapy animals providing comfort and healing to those in need.",
-    color: "bg-sage-light text-sage-dark",
-  },
-  {
-    icon: Clock,
-    title: "Part-time Pets",
-    description: "Experience the joy of animal companionship without full-time commitment.",
-    color: "bg-amber-light text-amber-dark",
-  },
-];
-
-const defaultStats = [
-  { value: "500+", label: "Animals Rescued" },
-  { value: "1,200+", label: "Therapy Sessions" },
-  { value: "300+", label: "Happy Adoptions" },
-  { value: "50+", label: "Volunteers" },
-];
-
-const featuredAnimals = [
-  { name: "Luna", species: "Golden Retriever", status: "Therapy Certified", image: lunaImg },
-  { name: "Oliver", species: "Tabby Cat", status: "Available for Adoption", image: oliverImg },
-  { name: "Daisy", species: "Rabbit", status: "Part-time Pet", image: daisyImg },
-];
+const iconMap: Record<string, React.ElementType> = {
+  Heart, Sparkles, Users, Clock
+};
 
 interface HeroContent {
   badge: string;
@@ -80,6 +40,27 @@ interface StatsItem {
 interface ProgramsHeaderContent {
   title: string;
   description: string;
+}
+
+interface ProgramItem {
+  icon: string;
+  title: string;
+  description: string;
+  color: string;
+  link: string;
+}
+
+interface ProgramsListContent {
+  items: ProgramItem[];
+}
+
+interface FeaturedAnimalsContent {
+  title: string;
+  items: Array<{
+    name: string;
+    species: string;
+    status: string;
+  }>;
 }
 
 interface FeaturedStoryContent {
@@ -102,6 +83,8 @@ interface CTAContent {
 const Index = () => {
   const { getSection, getSectionList, isLoading } = usePageContent('home');
   const { getImage, isLoading: imagesLoading } = useWebsiteImages();
+  const { data: animals = [], isLoading: animalsLoading } = useAnimals();
+  
   const hero = getSection<HeroContent>('hero', {
     badge: "Healing Through Connection",
     title: "Where Healing Paws Meet",
@@ -112,11 +95,26 @@ const Index = () => {
   });
 
   const statsData = getSectionList<StatsItem>('stats');
+  const defaultStats = [
+    { value: "500+", label: "Animals Rescued" },
+    { value: "1,200+", label: "Therapy Sessions" },
+    { value: "300+", label: "Happy Adoptions" },
+    { value: "50+", label: "Volunteers" },
+  ];
   const stats = statsData.length > 0 ? statsData : defaultStats;
 
   const programsHeader = getSection<ProgramsHeaderContent>('programs_header', {
     title: "Our Programs",
     description: "Discover the many ways Woo-Fur creates meaningful connections between animals and humans."
+  });
+
+  const programsList = getSection<ProgramsListContent>('programs_list', {
+    items: [
+      { icon: "Heart", title: "Animal Rescue", description: "Saving animals in need and giving them a second chance at a loving life.", color: "bg-accent/10 text-accent", link: "/programs/rescue" },
+      { icon: "Sparkles", title: "Rehabilitation", description: "Medical care and emotional healing for animals recovering from trauma.", color: "bg-primary/10 text-primary", link: "/programs/rehabilitation" },
+      { icon: "Users", title: "Therapy Sessions", description: "Certified therapy animals providing comfort and healing to those in need.", color: "bg-sage-light text-sage-dark", link: "/programs/therapy" },
+      { icon: "Clock", title: "Part-time Pets", description: "Experience the joy of animal companionship without full-time commitment.", color: "bg-amber-light text-amber-dark", link: "/programs/part-time-pets" },
+    ]
   });
 
   const featuredStory = getSection<FeaturedStoryContent>('featured_story', {
@@ -134,6 +132,9 @@ const Index = () => {
     buttonPrimary: "Schedule a Visit",
     buttonSecondary: "Make a Donation"
   });
+
+  // Get featured animals from database (first 3)
+  const featuredAnimals = animals.slice(0, 3);
 
   return (
     <Layout>
@@ -182,30 +183,49 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Floating Animal Cards Preview */}
+          {/* Floating Animal Cards Preview - From Database */}
           <div className="mt-16 flex justify-center gap-4 overflow-x-auto pb-4 px-4 -mx-4 md:overflow-visible md:px-0 md:mx-0">
-            {featuredAnimals.map((animal, index) => (
-              <Card 
-                key={animal.name}
-                className="min-w-[200px] md:min-w-[220px] card-hover animate-slide-up overflow-hidden"
-                style={{ animationDelay: `${0.3 + index * 0.1}s` }}
-              >
-                <div className="aspect-square overflow-hidden">
-                  <img 
-                    src={animal.image} 
-                    alt={animal.name}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                  />
-                </div>
-                <CardContent className="p-4 text-center">
-                  <h3 className="font-heading font-semibold text-lg">{animal.name}</h3>
-                  <p className="text-sm text-muted-foreground">{animal.species}</p>
-                  <span className="inline-block mt-2 text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
-                    {animal.status}
-                  </span>
-                </CardContent>
-              </Card>
-            ))}
+            {animalsLoading ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <Card key={index} className="min-w-[200px] md:min-w-[220px] overflow-hidden">
+                  <Skeleton className="aspect-square w-full" />
+                  <CardContent className="p-4 text-center">
+                    <Skeleton className="h-4 w-20 mx-auto mb-2" />
+                    <Skeleton className="h-3 w-16 mx-auto" />
+                  </CardContent>
+                </Card>
+              ))
+            ) : featuredAnimals.length > 0 ? (
+              featuredAnimals.map((animal, index) => (
+                <Card 
+                  key={animal.id}
+                  className="min-w-[200px] md:min-w-[220px] card-hover animate-slide-up overflow-hidden"
+                  style={{ animationDelay: `${0.3 + index * 0.1}s` }}
+                >
+                  <Link to={`/animals/${animal.id}`}>
+                    <div className="aspect-square overflow-hidden">
+                      <img 
+                        src={animal.image} 
+                        alt={animal.name}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      />
+                    </div>
+                    <CardContent className="p-4 text-center">
+                      <h3 className="font-heading font-semibold text-lg">{animal.name}</h3>
+                      <p className="text-sm text-muted-foreground">{animal.breed}</p>
+                      <span className="inline-block mt-2 text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+                        {animal.status}
+                      </span>
+                    </CardContent>
+                  </Link>
+                </Card>
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <PawPrint className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>No animals yet. Add some in the admin panel!</p>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -243,30 +263,33 @@ const Index = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {defaultPrograms.map((program) => (
-              <Card 
-                key={program.title}
-                className="group card-hover border-2 border-transparent hover:border-primary/20"
-              >
-                <CardHeader>
-                  <div className={`w-12 h-12 rounded-xl ${program.color} flex items-center justify-center mb-2 group-hover:scale-110 transition-transform`}>
-                    <program.icon className="h-6 w-6" />
-                  </div>
-                  <CardTitle className="text-lg">{program.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {program.description}
-                  </p>
-                  <Link 
-                    to="/programs" 
-                    className="inline-flex items-center text-sm font-medium text-primary hover:gap-2 transition-all gap-1"
-                  >
-                    Learn more <ChevronRight className="h-4 w-4" />
-                  </Link>
-                </CardContent>
-              </Card>
-            ))}
+            {programsList.items.map((program) => {
+              const IconComponent = iconMap[program.icon] || Heart;
+              return (
+                <Card 
+                  key={program.title}
+                  className="group card-hover border-2 border-transparent hover:border-primary/20"
+                >
+                  <CardHeader>
+                    <div className={`w-12 h-12 rounded-xl ${program.color} flex items-center justify-center mb-2 group-hover:scale-110 transition-transform`}>
+                      <IconComponent className="h-6 w-6" />
+                    </div>
+                    <CardTitle className="text-lg">{program.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {program.description}
+                    </p>
+                    <Link 
+                      to={program.link || "/programs"} 
+                      className="inline-flex items-center text-sm font-medium text-primary hover:gap-2 transition-all gap-1"
+                    >
+                      Learn more <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -302,12 +325,16 @@ const Index = () => {
             </div>
             
             <div className="relative">
-              <div className="aspect-square rounded-2xl overflow-hidden shadow-elevated">
-                <img 
-                  src={getImage('home-featured-story', featuredStory.storyImage || lunaImg)} 
-                  alt="Luna the therapy dog"
-                  className="w-full h-full object-cover"
-                />
+              <div className="aspect-square rounded-2xl overflow-hidden shadow-elevated bg-muted flex items-center justify-center">
+                {featuredAnimals[0] ? (
+                  <img 
+                    src={featuredAnimals[0].image} 
+                    alt={featuredAnimals[0].name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <PawPrint className="h-24 w-24 text-muted-foreground/30" />
+                )}
               </div>
               <div className="absolute -bottom-4 -right-4 bg-card rounded-xl p-4 shadow-elevated">
                 <div className="flex items-center gap-2">

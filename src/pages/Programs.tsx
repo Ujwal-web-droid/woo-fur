@@ -1,12 +1,14 @@
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Heart, Sparkles, Users, Clock, ArrowRight, Layers, TrendingUp, CheckCircle } from "lucide-react";
+import { Heart, Sparkles, Users, Clock, ArrowRight, Layers, TrendingUp, CheckCircle, PawPrint } from "lucide-react";
 import { Link } from "react-router-dom";
-import { testimonials, programStats } from "@/data/mockData";
 import { TestimonialCarousel } from "@/components/shared/TestimonialCarousel";
 import { useEffect, useState } from "react";
 import { usePageContent } from "@/hooks/usePageContent";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const iconMap: Record<string, React.ElementType> = {
   Heart, Sparkles, Users, Clock, Layers, TrendingUp, CheckCircle, ArrowRight
@@ -27,6 +29,7 @@ interface ProgramItem {
   description: string;
   features: string[];
   color: string;
+  stats?: { label: string; value: number };
 }
 
 interface ProgramsListContent {
@@ -48,6 +51,18 @@ interface CTAContent {
   description: string;
   buttonPrimary: string;
   buttonSecondary: string;
+}
+
+interface TestimonialsContent {
+  title: string;
+  description: string;
+  items: Array<{
+    id: string;
+    name: string;
+    role: string;
+    content: string;
+    rating: number;
+  }>;
 }
 
 const AnimatedCounter = ({ end, suffix = "" }: { end: number; suffix?: string }) => {
@@ -78,6 +93,26 @@ const AnimatedCounter = ({ end, suffix = "" }: { end: number; suffix?: string })
 const Programs = () => {
   const { getSection, isLoading } = usePageContent('programs');
 
+  // Fetch testimonials from database
+  const { data: dbTestimonials = [] } = useQuery({
+    queryKey: ['testimonials'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('stories')
+        .select('id, title, author_name, excerpt, category')
+        .eq('status', 'published')
+        .limit(5);
+      if (error) throw error;
+      return data?.map(s => ({
+        id: s.id,
+        name: s.author_name || 'Anonymous',
+        role: s.category,
+        content: s.excerpt || s.title,
+        rating: 5
+      })) || [];
+    }
+  });
+
   const hero = getSection<HeroContent>('hero', {
     badge: "Our Programs",
     title: "Programs That",
@@ -87,10 +122,10 @@ const Programs = () => {
 
   const programsList = getSection<ProgramsListContent>('programs_list', {
     items: [
-      { id: "rescue", icon: "Heart", title: "Animal Rescue", slug: "rescue", description: "We rescue animals from shelters, abusive situations, and abandonment. Every animal deserves a second chance at life.", features: ["24/7 rescue hotline", "Medical care provided", "Rehabilitation support", "Forever home placement"], color: "bg-accent/10 text-accent" },
-      { id: "rehabilitation", icon: "Sparkles", title: "Rehabilitation", slug: "rehabilitation", description: "Our expert team provides medical care and emotional healing for animals recovering from trauma or illness.", features: ["Veterinary care", "Behavioral therapy", "Physical rehabilitation", "Nutritional programs"], color: "bg-primary/10 text-primary" },
-      { id: "therapy", icon: "Users", title: "Therapy Sessions", slug: "therapy", description: "Certified therapy animals provide comfort and healing through guided sessions with trained professionals.", features: ["Certified therapy animals", "Professional handlers", "Individual & group sessions", "Flexible scheduling"], color: "bg-sage-light text-sage-dark" },
-      { id: "part-time-pets", icon: "Clock", title: "Part-time Pets", slug: "part-time-pets", description: "Experience the joy of animal companionship without full-time commitment. Perfect for busy lifestyles.", features: ["Flexible time periods", "All supplies provided", "No long-term commitment", "Trial before adoption"], color: "bg-amber-light text-amber-dark" }
+      { id: "rescue", icon: "Heart", title: "Animal Rescue", slug: "rescue", description: "We rescue animals from shelters, abusive situations, and abandonment. Every animal deserves a second chance at life.", features: ["24/7 rescue hotline", "Medical care provided", "Rehabilitation support", "Forever home placement"], color: "bg-accent/10 text-accent", stats: { label: "Animals Rescued", value: 500 } },
+      { id: "rehabilitation", icon: "Sparkles", title: "Rehabilitation", slug: "rehabilitation", description: "Our expert team provides medical care and emotional healing for animals recovering from trauma or illness.", features: ["Veterinary care", "Behavioral therapy", "Physical rehabilitation", "Nutritional programs"], color: "bg-primary/10 text-primary", stats: { label: "Animals Healed", value: 350 } },
+      { id: "therapy", icon: "Users", title: "Therapy Sessions", slug: "therapy", description: "Certified therapy animals provide comfort and healing through guided sessions with trained professionals.", features: ["Certified therapy animals", "Professional handlers", "Individual & group sessions", "Flexible scheduling"], color: "bg-sage-light text-sage-dark", stats: { label: "Sessions Completed", value: 1200 } },
+      { id: "part-time-pets", icon: "Clock", title: "Part-time Pets", slug: "part-time-pets", description: "Experience the joy of animal companionship without full-time commitment. Perfect for busy lifestyles.", features: ["Flexible time periods", "All supplies provided", "No long-term commitment", "Trial before adoption"], color: "bg-amber-light text-amber-dark", stats: { label: "Active Participants", value: 150 } }
     ]
   });
 
@@ -112,16 +147,32 @@ const Programs = () => {
     buttonSecondary: "Contact Us"
   });
 
-  // Map stats to programs
-  const getStatsForProgram = (slug: string) => {
-    switch(slug) {
-      case 'rescue': return { label: "Animals Rescued", value: programStats.rescue.animalsRescued };
-      case 'rehabilitation': return { label: "Animals Healed", value: programStats.rehabilitation.animalsHealed };
-      case 'therapy': return { label: "Sessions Completed", value: programStats.therapy.sessionsCompleted };
-      case 'part-time-pets': return { label: "Active Participants", value: programStats.partTimePets.activeParticipants };
-      default: return { label: "Count", value: 0 };
-    }
-  };
+  const testimonials = getSection<TestimonialsContent>('testimonials', {
+    title: "What People Say",
+    description: "Hear from those whose lives have been touched by our programs",
+    items: []
+  });
+
+  // Use database testimonials if available, otherwise use content from admin
+  const displayTestimonials = dbTestimonials.length > 0 ? dbTestimonials : testimonials.items;
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="container-app section-padding">
+          <div className="space-y-8">
+            <Skeleton className="h-12 w-1/2 mx-auto" />
+            <Skeleton className="h-6 w-3/4 mx-auto" />
+            <div className="grid md:grid-cols-4 gap-6">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-48" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -147,17 +198,14 @@ const Programs = () => {
       <section className="py-12 bg-primary/5">
         <div className="container-app">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {programsList.items.map((program) => {
-              const stats = getStatsForProgram(program.slug);
-              return (
-                <div key={program.slug} className="text-center">
-                  <div className="font-heading text-3xl md:text-4xl font-bold text-primary">
-                    <AnimatedCounter end={stats.value} suffix="+" />
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-1">{stats.label}</p>
+            {programsList.items.map((program) => (
+              <div key={program.slug} className="text-center">
+                <div className="font-heading text-3xl md:text-4xl font-bold text-primary">
+                  <AnimatedCounter end={program.stats?.value || 0} suffix="+" />
                 </div>
-              );
-            })}
+                <p className="text-sm text-muted-foreground mt-1">{program.stats?.label || program.title}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -165,40 +213,48 @@ const Programs = () => {
       {/* Programs Grid */}
       <section className="section-padding bg-background">
         <div className="container-app">
-          <div className="space-y-8">
-            {programsList.items.map((program, index) => {
-              const IconComponent = iconMap[program.icon] || Heart;
-              return (
-                <Card key={program.title} className="overflow-hidden group hover:shadow-lg transition-shadow">
-                  <div className="grid md:grid-cols-2 gap-0">
-                    <div className={`p-8 md:p-12 ${index % 2 === 1 ? "md:order-2" : ""}`}>
-                      <div className={`w-14 h-14 rounded-xl ${program.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                        <IconComponent className="h-7 w-7" />
+          {programsList.items.length === 0 ? (
+            <div className="text-center py-12">
+              <PawPrint className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="font-heading text-xl font-semibold mb-2">No Programs Yet</h3>
+              <p className="text-muted-foreground">Programs will appear here once added through the admin panel.</p>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {programsList.items.map((program, index) => {
+                const IconComponent = iconMap[program.icon] || Heart;
+                return (
+                  <Card key={program.id || program.title} className="overflow-hidden group hover:shadow-lg transition-shadow">
+                    <div className="grid md:grid-cols-2 gap-0">
+                      <div className={`p-8 md:p-12 ${index % 2 === 1 ? "md:order-2" : ""}`}>
+                        <div className={`w-14 h-14 rounded-xl ${program.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                          <IconComponent className="h-7 w-7" />
+                        </div>
+                        <h2 className="font-heading text-2xl md:text-3xl font-bold mb-4">{program.title}</h2>
+                        <p className="text-muted-foreground mb-6">{program.description}</p>
+                        <ul className="space-y-2 mb-6">
+                          {program.features.map((feature) => (
+                            <li key={feature} className="flex items-center gap-2 text-sm">
+                              <CheckCircle className="h-4 w-4 text-primary" />
+                              {feature}
+                            </li>
+                          ))}
+                        </ul>
+                        <Button className="gap-2" asChild>
+                          <Link to={`/programs/${program.slug}`}>
+                            Learn More <ArrowRight className="h-4 w-4" />
+                          </Link>
+                        </Button>
                       </div>
-                      <h2 className="font-heading text-2xl md:text-3xl font-bold mb-4">{program.title}</h2>
-                      <p className="text-muted-foreground mb-6">{program.description}</p>
-                      <ul className="space-y-2 mb-6">
-                        {program.features.map((feature) => (
-                          <li key={feature} className="flex items-center gap-2 text-sm">
-                            <CheckCircle className="h-4 w-4 text-primary" />
-                            {feature}
-                          </li>
-                        ))}
-                      </ul>
-                      <Button className="gap-2" asChild>
-                        <Link to={`/programs/${program.slug}`}>
-                          Learn More <ArrowRight className="h-4 w-4" />
-                        </Link>
-                      </Button>
+                      <div className={`bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center p-12 ${index % 2 === 1 ? "md:order-1" : ""}`}>
+                        <IconComponent className="h-32 w-32 text-primary/30 group-hover:scale-110 transition-transform" />
+                      </div>
                     </div>
-                    <div className={`bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center p-12 ${index % 2 === 1 ? "md:order-1" : ""}`}>
-                      <IconComponent className="h-32 w-32 text-primary/30 group-hover:scale-110 transition-transform" />
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
@@ -237,17 +293,19 @@ const Programs = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="section-padding bg-background">
-        <div className="container-app">
-          <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">What People Say</h2>
-            <p className="text-muted-foreground">Hear from those whose lives have been touched by our programs</p>
+      {displayTestimonials.length > 0 && (
+        <section className="section-padding bg-background">
+          <div className="container-app">
+            <div className="text-center mb-12">
+              <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4">{testimonials.title}</h2>
+              <p className="text-muted-foreground">{testimonials.description}</p>
+            </div>
+            <div className="max-w-3xl mx-auto">
+              <TestimonialCarousel testimonials={displayTestimonials} />
+            </div>
           </div>
-          <div className="max-w-3xl mx-auto">
-            <TestimonialCarousel testimonials={testimonials} />
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CTA Section */}
       <section className="section-padding bg-primary/5">

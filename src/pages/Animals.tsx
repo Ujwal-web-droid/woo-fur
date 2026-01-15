@@ -7,12 +7,21 @@ import { QuickViewModal } from "@/components/animals/QuickViewModal";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAnimals, useAnimalsRealtime } from "@/hooks/useAnimals";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePageContent } from "@/hooks/usePageContent";
 import type { Animal } from "@/types/database";
+
+interface HeroContent {
+  badge: string;
+  title: string;
+  titleHighlight: string;
+  description: string;
+}
 
 const Animals = () => {
   const { isFavorite, toggleFavorite } = useFavorites();
   const { data: animals = [], isLoading, error } = useAnimals();
   const { subscribeToAnimals } = useAnimalsRealtime();
+  const { getSection, isLoading: contentLoading } = usePageContent('animals');
   const [quickViewAnimal, setQuickViewAnimal] = useState<Animal | null>(null);
   const [filters, setFilters] = useState({
     search: "",
@@ -20,6 +29,13 @@ const Animals = () => {
     size: [] as string[],
     status: [] as string[],
     sortBy: "name",
+  });
+
+  const hero = getSection<HeroContent>('hero', {
+    badge: "Our Animals",
+    title: "Meet Our",
+    titleHighlight: "Furry Friends",
+    description: "Each of our animals has a unique story and personality. Find your perfect match for therapy, adoption, or companionship."
   });
 
   // Subscribe to real-time updates
@@ -83,13 +99,13 @@ const Animals = () => {
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
               <PawPrint className="h-4 w-4" />
-              <span>Our Animals</span>
+              <span>{hero.badge}</span>
             </div>
             <h1 className="font-heading text-4xl md:text-5xl font-bold mb-6">
-              Meet Our <span className="text-gradient">Furry Friends</span>
+              {hero.title} <span className="text-gradient">{hero.titleHighlight}</span>
             </h1>
             <p className="text-lg text-muted-foreground">
-              Each of our animals has a unique story and personality. Find your perfect match for therapy, adoption, or companionship.
+              {hero.description}
             </p>
           </div>
         </div>
@@ -143,8 +159,17 @@ const Animals = () => {
                 </div>
               )}
 
-              {/* Animals Grid */}
-              {!isLoading && !error && filteredAnimals.length === 0 && (
+              {/* Empty State */}
+              {!isLoading && !error && animals.length === 0 && (
+                <div className="text-center py-12">
+                  <PawPrint className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="font-heading text-xl font-semibold mb-2">No animals yet</h3>
+                  <p className="text-muted-foreground">Add animals through the admin panel to see them here.</p>
+                </div>
+              )}
+
+              {/* No Results State */}
+              {!isLoading && !error && animals.length > 0 && filteredAnimals.length === 0 && (
                 <div className="text-center py-12">
                   <PawPrint className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="font-heading text-xl font-semibold mb-2">No animals found</h3>

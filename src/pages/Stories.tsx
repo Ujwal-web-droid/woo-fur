@@ -12,11 +12,27 @@ import {
 } from "lucide-react";
 import { useStories, useFeaturedStories, useStoryLike, useStoriesRealtime } from "@/hooks/useStories";
 import { useAuth } from "@/context/AuthContext";
+import { usePageContent } from "@/hooks/usePageContent";
 import { cn } from "@/lib/utils";
 
-const categories = ["All", "healing", "transformation", "community", "youth"];
-
 const STORIES_PER_PAGE = 6;
+
+interface HeroContent {
+  badge: string;
+  title: string;
+  titleHighlight: string;
+  description: string;
+}
+
+interface CategoriesContent {
+  items: string[];
+}
+
+interface CTAContent {
+  title: string;
+  description: string;
+  buttonText: string;
+}
 
 const Stories = () => {
   const { user } = useAuth();
@@ -24,12 +40,32 @@ const Stories = () => {
   const { data: featuredStories = [] } = useFeaturedStories();
   const { likedStories, toggleLike } = useStoryLike();
   const { subscribeToStories } = useStoriesRealtime();
+  const { getSection, isLoading: contentLoading } = usePageContent('stories');
   
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [localLikes, setLocalLikes] = useState<Set<string>>(new Set());
   const [featuredIndex, setFeaturedIndex] = useState(0);
+
+  const hero = getSection<HeroContent>('hero', {
+    badge: "Impact Stories",
+    title: "Stories of",
+    titleHighlight: "Healing & Hope",
+    description: "Real stories from our community about the transformative power of the human-animal bond."
+  });
+
+  const categoriesContent = getSection<CategoriesContent>('categories', {
+    items: ["All", "healing", "transformation", "community", "youth"]
+  });
+
+  const ctaContent = getSection<CTAContent>('cta', {
+    title: "Have a Story to Share?",
+    description: "Your experience could inspire others. Share how our animals have impacted your life.",
+    buttonText: "Share Your Story"
+  });
+
+  const categories = categoriesContent.items;
 
   // Subscribe to real-time updates
   useEffect(() => {
@@ -109,13 +145,13 @@ const Stories = () => {
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
               <BookOpen className="h-4 w-4" />
-              <span>Impact Stories</span>
+              <span>{hero.badge}</span>
             </div>
             <h1 className="font-heading text-4xl md:text-5xl font-bold mb-6">
-              Stories of <span className="text-gradient">Healing & Hope</span>
+              {hero.title} <span className="text-gradient">{hero.titleHighlight}</span>
             </h1>
             <p className="text-lg text-muted-foreground">
-              Real stories from our community about the transformative power of the human-animal bond.
+              {hero.description}
             </p>
           </div>
         </div>
@@ -243,7 +279,18 @@ const Stories = () => {
             </div>
           )}
 
-          {!isLoading && paginatedStories.length === 0 ? (
+          {/* Empty State */}
+          {!isLoading && stories.length === 0 && (
+            <div className="text-center py-12">
+              <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="font-heading text-xl font-semibold mb-2">No Stories Yet</h3>
+              <p className="text-muted-foreground">
+                Stories will appear here once added through the admin panel.
+              </p>
+            </div>
+          )}
+
+          {!isLoading && stories.length > 0 && paginatedStories.length === 0 ? (
             <div className="text-center py-12">
               <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-heading text-xl font-semibold mb-2">No Stories Found</h3>
@@ -251,7 +298,7 @@ const Stories = () => {
                 Try adjusting your search or filter criteria.
               </p>
             </div>
-          ) : !isLoading && (
+          ) : !isLoading && paginatedStories.length > 0 && (
             <>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {paginatedStories.map((story) => (
@@ -342,15 +389,15 @@ const Stories = () => {
               <CardContent className="py-12">
                 <PenSquare className="h-12 w-12 text-primary mx-auto mb-4" />
                 <h3 className="font-heading text-2xl font-bold mb-3">
-                  Have a Story to Share?
+                  {ctaContent.title}
                 </h3>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  Your experience could inspire others. Share how our animals have impacted your life.
+                  {ctaContent.description}
                 </p>
                 <Button asChild size="lg">
                   <Link to="/stories/submit" className="gap-2">
                     <PenSquare className="h-4 w-4" />
-                    Share Your Story
+                    {ctaContent.buttonText}
                   </Link>
                 </Button>
               </CardContent>

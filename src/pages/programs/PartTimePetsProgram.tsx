@@ -2,37 +2,159 @@ import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Clock, ArrowLeft, Calendar, CheckCircle, Package, Heart, Home } from "lucide-react";
+import { Clock, ArrowLeft, Calendar, CheckCircle, Package, Heart, Home, PawPrint } from "lucide-react";
 import { Link } from "react-router-dom";
-import { animals, testimonials, programStats } from "@/data/mockData";
+import { useAnimals } from "@/hooks/useAnimals";
 import { TestimonialCarousel } from "@/components/shared/TestimonialCarousel";
+import { usePageContent } from "@/hooks/usePageContent";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const pricingOptions = [
-  { duration: "Weekend", days: "Fri-Sun", price: "$50", description: "Perfect for a trial experience", popular: false },
-  { duration: "1 Week", days: "7 days", price: "$120", description: "Great for vacation coverage", popular: true },
-  { duration: "2 Weeks", days: "14 days", price: "$200", description: "Extended companionship", popular: false },
-  { duration: "Monthly", days: "30 days", price: "$350", description: "Regular pet presence", popular: false },
-];
+const iconMap: Record<string, React.ElementType> = {
+  Heart, Calendar, Package, Home, Clock
+};
 
-const whatsIncluded = [
-  "All food and treats for the duration",
-  "Necessary supplies (bowls, toys, bedding)",
-  "24/7 support hotline",
-  "Pre-visit orientation session",
-  "Care instructions and guidelines",
-  "Emergency vet contact information",
-];
+interface HeroContent {
+  badge: string;
+  title: string;
+  titleHighlight: string;
+  description: string;
+}
 
-const careInstructions = [
-  { title: "Feeding Schedule", content: "We provide a detailed feeding schedule with the exact type and amount of food. Most of our animals eat twice daily - morning and evening. All food and treats are included and delivered with the animal." },
-  { title: "Exercise & Play", content: "Each animal comes with a guide to their preferred activities. Dogs need daily walks (we'll specify duration), cats enjoy interactive toys, and smaller animals have specific play needs. We provide all toys and equipment." },
-  { title: "Health & Safety", content: "All animals are up-to-date on vaccinations and health checks. We provide emergency vet contacts and our 24/7 support line. Any medications needed will be clearly labeled with instructions." },
-  { title: "Pickup & Return", content: "You can pick up your part-time pet from our facility, or we can arrange delivery for an additional fee. Return times are flexible - just coordinate with us beforehand." },
-];
+interface StatsContent {
+  items: Array<{ value: string; label: string }>;
+}
+
+interface HowItWorksContent {
+  title: string;
+  description: string;
+  steps: Array<{ icon: string; title: string; description: string }>;
+}
+
+interface PricingContent {
+  title: string;
+  description: string;
+  options: Array<{ duration: string; days: string; price: string; description: string; popular: boolean }>;
+}
+
+interface IncludedContent {
+  title: string;
+  description: string;
+  items: string[];
+  noHiddenCostsTitle: string;
+  noHiddenCostsDescription: string;
+  deliveryNote: string;
+}
+
+interface CareContent {
+  title: string;
+  description: string;
+  items: Array<{ title: string; content: string }>;
+}
+
+interface CTAContent {
+  title: string;
+  description: string;
+  buttonText: string;
+}
 
 const PartTimePetsProgram = () => {
+  const { data: animals = [], isLoading: animalsLoading } = useAnimals();
+  const { getSection, isLoading } = usePageContent('part-time-pets');
+
+  // Fetch testimonials from database
+  const { data: testimonials = [] } = useQuery({
+    queryKey: ['ptp-testimonials'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('stories')
+        .select('id, title, author_name, excerpt, category')
+        .eq('status', 'published')
+        .ilike('category', '%part%')
+        .limit(5);
+      if (error) throw error;
+      return data?.map(s => ({
+        id: s.id,
+        name: s.author_name || 'Anonymous',
+        role: 'Part-time Pet Parent',
+        content: s.excerpt || s.title,
+        rating: 5
+      })) || [];
+    }
+  });
+
+  const hero = getSection<HeroContent>('hero', {
+    badge: "Part-time Pets Program",
+    title: "All the Joy,",
+    titleHighlight: "Flexible Commitment",
+    description: "Experience the companionship of a pet without the full-time commitment. Perfect for busy professionals, travelers, or those wanting to try pet ownership."
+  });
+
+  const stats = getSection<StatsContent>('stats', {
+    items: [
+      { value: "150+", label: "Active Participants" },
+      { value: "25", label: "Animals Available" },
+      { value: "98%", label: "Satisfaction Rate" }
+    ]
+  });
+
+  const howItWorks = getSection<HowItWorksContent>('how_it_works', {
+    title: "How It Works",
+    description: "Simple steps to your part-time companion",
+    steps: [
+      { icon: "Heart", title: "Choose", description: "Browse available animals and find your match" },
+      { icon: "Calendar", title: "Schedule", description: "Pick dates that work for your lifestyle" },
+      { icon: "Package", title: "Receive", description: "We deliver everything you need" },
+      { icon: "Home", title: "Enjoy", description: "Create memories with your part-time pet" }
+    ]
+  });
+
+  const pricing = getSection<PricingContent>('pricing', {
+    title: "Pricing Options",
+    description: "Flexible durations to fit your needs",
+    options: [
+      { duration: "Weekend", days: "Fri-Sun", price: "$50", description: "Perfect for a trial experience", popular: false },
+      { duration: "1 Week", days: "7 days", price: "$120", description: "Great for vacation coverage", popular: true },
+      { duration: "2 Weeks", days: "14 days", price: "$200", description: "Extended companionship", popular: false },
+      { duration: "Monthly", days: "30 days", price: "$350", description: "Regular pet presence", popular: false }
+    ]
+  });
+
+  const included = getSection<IncludedContent>('included', {
+    title: "What's Included",
+    description: "",
+    items: [
+      "All food and treats for the duration",
+      "Necessary supplies (bowls, toys, bedding)",
+      "24/7 support hotline",
+      "Pre-visit orientation session",
+      "Care instructions and guidelines",
+      "Emergency vet contact information"
+    ],
+    noHiddenCostsTitle: "No Hidden Costs",
+    noHiddenCostsDescription: "Our pricing includes everything you need. Food, supplies, toys, and support are all covered. The only additional cost would be for optional delivery service.",
+    deliveryNote: "Delivery available for $25 within city limits."
+  });
+
+  const care = getSection<CareContent>('care', {
+    title: "Care Instructions",
+    description: "Everything you need to know",
+    items: [
+      { title: "Feeding Schedule", content: "We provide a detailed feeding schedule with the exact type and amount of food. Most of our animals eat twice daily - morning and evening. All food and treats are included and delivered with the animal." },
+      { title: "Exercise & Play", content: "Each animal comes with a guide to their preferred activities. Dogs need daily walks (we'll specify duration), cats enjoy interactive toys, and smaller animals have specific play needs. We provide all toys and equipment." },
+      { title: "Health & Safety", content: "All animals are up-to-date on vaccinations and health checks. We provide emergency vet contacts and our 24/7 support line. Any medications needed will be clearly labeled with instructions." },
+      { title: "Pickup & Return", content: "You can pick up your part-time pet from our facility, or we can arrange delivery for an additional fee. Return times are flexible - just coordinate with us beforehand." }
+    ]
+  });
+
+  const cta = getSection<CTAContent>('cta', {
+    title: "Ready for Some Furry Companionship?",
+    description: "Book your part-time pet experience today",
+    buttonText: "Book Now"
+  });
+
   const partTimeAnimals = animals.filter((a) => a.status === "Part-time Pet");
-  const ptpTestimonials = testimonials.filter((t) => t.program === "part-time-pets");
 
   return (
     <Layout>
@@ -52,13 +174,13 @@ const PartTimePetsProgram = () => {
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-light text-amber-dark text-sm font-medium mb-6">
               <Clock className="h-4 w-4" />
-              <span>Part-time Pets Program</span>
+              <span>{hero.badge}</span>
             </div>
             <h1 className="font-heading text-4xl md:text-5xl font-bold mb-6">
-              All the Joy, <span className="text-gradient">Flexible Commitment</span>
+              {hero.title} <span className="text-gradient">{hero.titleHighlight}</span>
             </h1>
             <p className="text-lg text-muted-foreground mb-8">
-              Experience the companionship of a pet without the full-time commitment. Perfect for busy professionals, travelers, or those wanting to try pet ownership.
+              {hero.description}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" asChild>
@@ -76,18 +198,12 @@ const PartTimePetsProgram = () => {
       <section className="py-12 bg-amber-light/30">
         <div className="container-app">
           <div className="grid grid-cols-3 gap-6 text-center">
-            <div>
-              <div className="font-heading text-3xl md:text-4xl font-bold text-amber-dark">{programStats.partTimePets.activeParticipants}+</div>
-              <p className="text-sm text-muted-foreground">Active Participants</p>
-            </div>
-            <div>
-              <div className="font-heading text-3xl md:text-4xl font-bold text-amber-dark">{programStats.partTimePets.animalsInProgram}</div>
-              <p className="text-sm text-muted-foreground">Animals Available</p>
-            </div>
-            <div>
-              <div className="font-heading text-3xl md:text-4xl font-bold text-amber-dark">{programStats.partTimePets.satisfactionRate}%</div>
-              <p className="text-sm text-muted-foreground">Satisfaction Rate</p>
-            </div>
+            {stats.items.map((stat, index) => (
+              <div key={index}>
+                <div className="font-heading text-3xl md:text-4xl font-bold text-amber-dark">{stat.value}</div>
+                <p className="text-sm text-muted-foreground">{stat.label}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -96,27 +212,25 @@ const PartTimePetsProgram = () => {
       <section className="section-padding bg-background">
         <div className="container-app">
           <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl font-bold mb-4">How It Works</h2>
-            <p className="text-muted-foreground">Simple steps to your part-time companion</p>
+            <h2 className="font-heading text-3xl font-bold mb-4">{howItWorks.title}</h2>
+            <p className="text-muted-foreground">{howItWorks.description}</p>
           </div>
           <div className="grid md:grid-cols-4 gap-6">
-            {[
-              { icon: Heart, title: "Choose", description: "Browse available animals and find your match" },
-              { icon: Calendar, title: "Schedule", description: "Pick dates that work for your lifestyle" },
-              { icon: Package, title: "Receive", description: "We deliver everything you need" },
-              { icon: Home, title: "Enjoy", description: "Create memories with your part-time pet" },
-            ].map((step, index) => (
-              <Card key={step.title}>
-                <CardContent className="p-6 text-center">
-                  <div className="w-14 h-14 rounded-xl bg-amber-light flex items-center justify-center mx-auto mb-4">
-                    <step.icon className="h-7 w-7 text-amber-dark" />
-                  </div>
-                  <div className="text-xs font-medium text-amber-dark mb-2">Step {index + 1}</div>
-                  <h3 className="font-heading font-semibold text-lg mb-2">{step.title}</h3>
-                  <p className="text-sm text-muted-foreground">{step.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+            {howItWorks.steps.map((step, index) => {
+              const IconComponent = iconMap[step.icon] || Heart;
+              return (
+                <Card key={step.title}>
+                  <CardContent className="p-6 text-center">
+                    <div className="w-14 h-14 rounded-xl bg-amber-light flex items-center justify-center mx-auto mb-4">
+                      <IconComponent className="h-7 w-7 text-amber-dark" />
+                    </div>
+                    <div className="text-xs font-medium text-amber-dark mb-2">Step {index + 1}</div>
+                    <h3 className="font-heading font-semibold text-lg mb-2">{step.title}</h3>
+                    <p className="text-sm text-muted-foreground">{step.description}</p>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -125,11 +239,11 @@ const PartTimePetsProgram = () => {
       <section className="section-padding bg-muted/30">
         <div className="container-app">
           <div className="text-center mb-12">
-            <h2 className="font-heading text-3xl font-bold mb-4">Pricing Options</h2>
-            <p className="text-muted-foreground">Flexible durations to fit your needs</p>
+            <h2 className="font-heading text-3xl font-bold mb-4">{pricing.title}</h2>
+            <p className="text-muted-foreground">{pricing.description}</p>
           </div>
           <div className="grid md:grid-cols-4 gap-6 max-w-5xl mx-auto">
-            {pricingOptions.map((option) => (
+            {pricing.options.map((option) => (
               <Card key={option.duration} className={`relative ${option.popular ? "ring-2 ring-primary" : ""}`}>
                 {option.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-primary text-primary-foreground text-xs font-medium rounded-full">
@@ -156,9 +270,9 @@ const PartTimePetsProgram = () => {
         <div className="container-app">
           <div className="grid md:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
             <div>
-              <h2 className="font-heading text-3xl font-bold mb-6">What's Included</h2>
+              <h2 className="font-heading text-3xl font-bold mb-6">{included.title}</h2>
               <ul className="space-y-3">
-                {whatsIncluded.map((item) => (
+                {included.items.map((item) => (
                   <li key={item} className="flex items-center gap-3">
                     <CheckCircle className="h-5 w-5 text-primary shrink-0" />
                     <span>{item}</span>
@@ -168,12 +282,12 @@ const PartTimePetsProgram = () => {
             </div>
             <Card className="bg-gradient-to-br from-amber-light/20 to-primary/10">
               <CardContent className="p-8">
-                <h3 className="font-heading text-xl font-semibold mb-4">No Hidden Costs</h3>
+                <h3 className="font-heading text-xl font-semibold mb-4">{included.noHiddenCostsTitle}</h3>
                 <p className="text-muted-foreground mb-4">
-                  Our pricing includes everything you need. Food, supplies, toys, and support are all covered. The only additional cost would be for optional delivery service.
+                  {included.noHiddenCostsDescription}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Delivery available for $25 within city limits.
+                  {included.deliveryNote}
                 </p>
               </CardContent>
             </Card>
@@ -188,7 +302,13 @@ const PartTimePetsProgram = () => {
             <h2 className="font-heading text-3xl font-bold mb-4">Available Part-time Pets</h2>
             <p className="text-muted-foreground">Meet your potential companions</p>
           </div>
-          {partTimeAnimals.length > 0 ? (
+          {animalsLoading ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="aspect-square rounded-lg" />
+              ))}
+            </div>
+          ) : partTimeAnimals.length > 0 ? (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {partTimeAnimals.map((animal) => (
                 <Card key={animal.id} className="overflow-hidden card-hover group">
@@ -212,7 +332,8 @@ const PartTimePetsProgram = () => {
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">All our part-time pets are currently booked. Check back soon!</p>
+              <PawPrint className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground">No part-time pets available at the moment. Add animals through the admin panel!</p>
             </div>
           )}
           <div className="text-center mt-8">
@@ -228,11 +349,11 @@ const PartTimePetsProgram = () => {
         <div className="container-app">
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="font-heading text-3xl font-bold mb-4">Care Instructions</h2>
-              <p className="text-muted-foreground">Everything you need to know</p>
+              <h2 className="font-heading text-3xl font-bold mb-4">{care.title}</h2>
+              <p className="text-muted-foreground">{care.description}</p>
             </div>
             <Accordion type="single" collapsible className="space-y-2">
-              {careInstructions.map((item) => (
+              {care.items.map((item) => (
                 <AccordionItem key={item.title} value={item.title} className="bg-card border rounded-xl px-6">
                   <AccordionTrigger className="text-left font-medium hover:no-underline">
                     {item.title}
@@ -248,14 +369,14 @@ const PartTimePetsProgram = () => {
       </section>
 
       {/* Testimonials */}
-      {ptpTestimonials.length > 0 && (
+      {testimonials.length > 0 && (
         <section className="section-padding bg-muted/30">
           <div className="container-app">
             <div className="text-center mb-12">
               <h2 className="font-heading text-3xl font-bold mb-4">Happy Part-time Pet Parents</h2>
             </div>
             <div className="max-w-3xl mx-auto">
-              <TestimonialCarousel testimonials={ptpTestimonials} />
+              <TestimonialCarousel testimonials={testimonials} />
             </div>
           </div>
         </section>
@@ -264,12 +385,12 @@ const PartTimePetsProgram = () => {
       {/* CTA */}
       <section className="section-padding bg-amber-light/30">
         <div className="container-app text-center">
-          <h2 className="font-heading text-3xl font-bold mb-4">Ready for Some Furry Companionship?</h2>
-          <p className="text-muted-foreground mb-8">Book your part-time pet experience today</p>
+          <h2 className="font-heading text-3xl font-bold mb-4">{cta.title}</h2>
+          <p className="text-muted-foreground mb-8">{cta.description}</p>
           <Button size="lg" className="gap-2" asChild>
             <Link to="/booking">
               <Calendar className="h-5 w-5" />
-              Book Now
+              {cta.buttonText}
             </Link>
           </Button>
         </div>
