@@ -1,9 +1,8 @@
 import { useState, useRef } from 'react';
-import { useAnimals } from '@/hooks/useAnimals';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Plus, Pencil, Trash2, Upload, Image, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Upload, X } from 'lucide-react';
 
 interface AnimalFormData {
   name: string;
@@ -26,6 +25,22 @@ interface AnimalFormData {
   availability_status: string;
   adoption_status: string;
   photos: string[];
+}
+
+interface DbAnimal {
+  id: string;
+  name: string;
+  species: string;
+  breed: string | null;
+  age: number | null;
+  gender: string | null;
+  size: string | null;
+  biography: string | null;
+  availability_status: string | null;
+  adoption_status: string | null;
+  photos: string[] | null;
+  created_at: string;
+  updated_at: string;
 }
 
 const defaultFormData: AnimalFormData = {
@@ -42,7 +57,19 @@ const defaultFormData: AnimalFormData = {
 };
 
 export function AdminAnimals() {
-  const { data: animals, isLoading } = useAnimals();
+  // Use raw database query for admin
+  const { data: animals, isLoading } = useQuery({
+    queryKey: ['admin-animals'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('animals')
+        .select('*')
+        .order('name');
+      if (error) throw error;
+      return data as DbAnimal[];
+    },
+  });
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -52,7 +79,7 @@ export function AdminAnimals() {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleEdit = (animal: any) => {
+  const handleEdit = (animal: DbAnimal) => {
     setEditingId(animal.id);
     setFormData({
       name: animal.name || '',
@@ -133,6 +160,8 @@ export function AdminAnimals() {
         if (error) throw error;
         toast({ title: 'Animal created successfully' });
       }
+      // Invalidate both admin and public animal queries
+      queryClient.invalidateQueries({ queryKey: ['admin-animals'] });
       queryClient.invalidateQueries({ queryKey: ['animals'] });
       setIsDialogOpen(false);
     } catch (error: any) {
@@ -148,11 +177,19 @@ export function AdminAnimals() {
     try {
       const { error } = await supabase.from('animals').delete().eq('id', id);
       if (error) throw error;
+      // Invalidate both admin and public animal queries
+      queryClient.invalidateQueries({ queryKey: ['admin-animals'] });
       queryClient.invalidateQueries({ queryKey: ['animals'] });
       toast({ title: 'Animal deleted' });
     } catch (error: any) {
       toast({ title: 'Error deleting animal', description: error.message, variant: 'destructive' });
     }
+  };
+
+  const getStatusLabel = (animal: DbAnimal) => {
+    if (animal.availability_status === 'available') return 'Available';
+    if (animal.availability_status === 'busy') return 'Busy';
+    return 'Unavailable';
   };
 
   if (isLoading) {
@@ -331,6 +368,7 @@ export function AdminAnimals() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Photo</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Species</TableHead>
                 <TableHead>Breed</TableHead>
@@ -342,13 +380,22 @@ export function AdminAnimals() {
             <TableBody>
               {animals?.map((animal) => (
                 <TableRow key={animal.id}>
+                  <TableCell>
+                    <div className="w-10 h-10 rounded-md overflow-hidden bg-muted">
+                      {animal.photos?.[0] ? (
+                        <img src={animal.photos[0]} alt={animal.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">N/A</div>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="font-medium">{animal.name}</TableCell>
                   <TableCell className="capitalize">{animal.species}</TableCell>
                   <TableCell>{animal.breed || '-'}</TableCell>
-                  <TableCell>{animal.age || '-'}</TableCell>
+                  <TableCell>{animal.age ? `${animal.age} yr` : '-'}</TableCell>
                   <TableCell>
-                    <Badge variant={animal.status?.includes('Available') ? 'default' : 'secondary'}>
-                      {animal.status}
+                    <Badge variant={animal.availability_status === 'available' ? 'default' : 'secondary'}>
+                      {getStatusLabel(animal)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
@@ -363,7 +410,7 @@ export function AdminAnimals() {
               ))}
               {!animals?.length && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     No animals found. Add your first animal above.
                   </TableCell>
                 </TableRow>

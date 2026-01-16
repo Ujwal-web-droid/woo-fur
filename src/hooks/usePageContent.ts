@@ -27,7 +27,8 @@ export function usePageContent(pageSlug: string) {
       if (error) throw error;
       return data as PageContent[];
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 0, // No cache - always fetch fresh data
+    refetchOnWindowFocus: true,
   });
 
   const getSection = <T = Record<string, any>>(sectionKey: string, fallback?: T): T => {
