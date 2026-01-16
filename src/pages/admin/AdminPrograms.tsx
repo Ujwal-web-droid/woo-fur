@@ -91,7 +91,9 @@ export function AdminPrograms() {
         if (error) throw error;
         toast({ title: 'Program created successfully' });
       }
+      // Invalidate both admin and public program queries
       queryClient.invalidateQueries({ queryKey: ['admin-programs'] });
+      queryClient.invalidateQueries({ queryKey: ['programs'] });
       setIsDialogOpen(false);
     } catch (error: any) {
       toast({ title: 'Error saving program', description: error.message, variant: 'destructive' });
@@ -106,7 +108,9 @@ export function AdminPrograms() {
     try {
       const { error } = await supabase.from('programs').delete().eq('id', id);
       if (error) throw error;
+      // Invalidate both admin and public program queries
       queryClient.invalidateQueries({ queryKey: ['admin-programs'] });
+      queryClient.invalidateQueries({ queryKey: ['programs'] });
       toast({ title: 'Program deleted' });
     } catch (error: any) {
       toast({ title: 'Error deleting program', description: error.message, variant: 'destructive' });
@@ -120,7 +124,9 @@ export function AdminPrograms() {
         .update({ active })
         .eq('id', id);
       if (error) throw error;
+      // Invalidate both admin and public program queries
       queryClient.invalidateQueries({ queryKey: ['admin-programs'] });
+      queryClient.invalidateQueries({ queryKey: ['programs'] });
       toast({ title: active ? 'Program activated' : 'Program deactivated' });
     } catch (error: any) {
       toast({ title: 'Error updating program', description: error.message, variant: 'destructive' });

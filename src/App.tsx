@@ -46,7 +46,15 @@ import { AdminContent } from "./pages/admin/AdminContent";
 import { AdminSettings } from "./pages/admin/AdminSettings";
 import { AdminAuditLog } from "./pages/admin/AdminAuditLog";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 0,
+      refetchOnWindowFocus: true,
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
