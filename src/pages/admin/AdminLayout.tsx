@@ -24,6 +24,7 @@ const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/admin' },
   { label: 'Animals', icon: PawPrint, path: '/admin/animals' },
   { label: 'Programs', icon: Layers, path: '/admin/programs' },
+  { label: 'Program Pages', icon: FileText, path: '/admin/program-content' },
   { label: 'Bookings', icon: Calendar, path: '/admin/bookings' },
   { label: 'Stories', icon: BookOpen, path: '/admin/stories' },
   { label: 'Users', icon: Users, path: '/admin/users' },
