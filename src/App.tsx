@@ -38,6 +38,7 @@ import { AdminLayout } from "./pages/admin/AdminLayout";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { AdminAnimals } from "./pages/admin/AdminAnimals";
 import { AdminPrograms } from "./pages/admin/AdminPrograms";
+import { AdminProgramContent } from "./pages/admin/AdminProgramContent";
 import { AdminBookings } from "./pages/admin/AdminBookings";
 import { AdminStories } from "./pages/admin/AdminStories";
 import { AdminUsers } from "./pages/admin/AdminUsers";
@@ -89,11 +90,12 @@ const App = () => (
                 } 
               />
               
-              {/* Admin Routes */}
+{/* Admin Routes */}
               <Route path="/admin" element={<AdminLayout />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="animals" element={<AdminAnimals />} />
                 <Route path="programs" element={<AdminPrograms />} />
+                <Route path="program-content" element={<AdminProgramContent />} />
                 <Route path="bookings" element={<AdminBookings />} />
                 <Route path="stories" element={<AdminStories />} />
                 <Route path="users" element={<AdminUsers />} />
