@@ -50,11 +50,16 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 0,
+      gcTime: 0, // Don't cache data
       refetchOnWindowFocus: true,
+      refetchOnMount: true,
       retry: 1,
     },
   },
 });
+
+// Clear all cached queries on app load to ensure fresh data
+queryClient.clear();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
