@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { OfflineBanner } from "@/components/pwa/OfflineBanner";
 import { UpdatePrompt } from "@/components/pwa/UpdatePrompt";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
@@ -50,7 +51,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 0,
-      gcTime: 0, // Don't cache data
+      gcTime: 0,
       refetchOnWindowFocus: true,
       refetchOnMount: true,
       retry: 1,
@@ -61,68 +62,76 @@ const queryClient = new QueryClient({
 // Clear all cached queries on app load to ensure fresh data
 queryClient.clear();
 
+// Component that sets up realtime subscriptions
+function RealtimeSyncProvider({ children }: { children: React.ReactNode }) {
+  useRealtimeSync();
+  return <>{children}</>;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AuthProvider>
-        <BookingProvider>
-          <Toaster />
-          <Sonner />
-          <OfflineBanner />
-          <UpdatePrompt />
-          <InstallPrompt />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/auth/reset-password" element={<ResetPassword />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/animals" element={<Animals />} />
-              <Route path="/animals/:id" element={<AnimalProfile />} />
-              <Route path="/programs" element={<Programs />} />
-              <Route path="/programs/rescue" element={<RescueProgram />} />
-              <Route path="/programs/rehabilitation" element={<RehabilitationProgram />} />
-              <Route path="/programs/therapy" element={<TherapyProgram />} />
-              <Route path="/programs/part-time-pets" element={<PartTimePetsProgram />} />
-              <Route path="/stories" element={<Stories />} />
-              <Route path="/stories/submit" element={<StorySubmit />} />
-              <Route path="/stories/:id" element={<StoryDetail />} />
-              <Route path="/booking" element={<Booking />} />
-              <Route path="/booking/confirmation" element={<BookingConfirmation />} />
-              <Route path="/support" element={<Support />} />
-              <Route path="/volunteer" element={<Volunteer />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/install" element={<Install />} />
-              <Route 
-                path="/profile" 
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                } 
-              />
-              
-{/* Admin Routes */}
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="animals" element={<AdminAnimals />} />
-                <Route path="programs" element={<AdminPrograms />} />
-                <Route path="program-content" element={<AdminProgramContent />} />
-                <Route path="bookings" element={<AdminBookings />} />
-                <Route path="stories" element={<AdminStories />} />
-                <Route path="users" element={<AdminUsers />} />
-                <Route path="content" element={<AdminContent />} />
-                <Route path="settings" element={<AdminSettings />} />
-                <Route path="audit-log" element={<AdminAuditLog />} />
-              </Route>
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </BookingProvider>
-      </AuthProvider>
-    </TooltipProvider>
+    <RealtimeSyncProvider>
+      <TooltipProvider>
+        <AuthProvider>
+          <BookingProvider>
+            <Toaster />
+            <Sonner />
+            <OfflineBanner />
+            <UpdatePrompt />
+            <InstallPrompt />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/auth/reset-password" element={<ResetPassword />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/animals" element={<Animals />} />
+                <Route path="/animals/:id" element={<AnimalProfile />} />
+                <Route path="/programs" element={<Programs />} />
+                <Route path="/programs/rescue" element={<RescueProgram />} />
+                <Route path="/programs/rehabilitation" element={<RehabilitationProgram />} />
+                <Route path="/programs/therapy" element={<TherapyProgram />} />
+                <Route path="/programs/part-time-pets" element={<PartTimePetsProgram />} />
+                <Route path="/stories" element={<Stories />} />
+                <Route path="/stories/submit" element={<StorySubmit />} />
+                <Route path="/stories/:id" element={<StoryDetail />} />
+                <Route path="/booking" element={<Booking />} />
+                <Route path="/booking/confirmation" element={<BookingConfirmation />} />
+                <Route path="/support" element={<Support />} />
+                <Route path="/volunteer" element={<Volunteer />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/install" element={<Install />} />
+                <Route 
+                  path="/profile" 
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  } 
+                />
+                
+                {/* Admin Routes */}
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="animals" element={<AdminAnimals />} />
+                  <Route path="programs" element={<AdminPrograms />} />
+                  <Route path="program-content" element={<AdminProgramContent />} />
+                  <Route path="bookings" element={<AdminBookings />} />
+                  <Route path="stories" element={<AdminStories />} />
+                  <Route path="users" element={<AdminUsers />} />
+                  <Route path="content" element={<AdminContent />} />
+                  <Route path="settings" element={<AdminSettings />} />
+                  <Route path="audit-log" element={<AdminAuditLog />} />
+                </Route>
+                
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </BookingProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </RealtimeSyncProvider>
   </QueryClientProvider>
 );
 
