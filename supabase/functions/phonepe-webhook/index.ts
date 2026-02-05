@@ -32,7 +32,11 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!saltKey) {
-      throw new Error("PhonePe salt key not configured");
+      console.error("PhonePe salt key not configured");
+      return new Response(
+        JSON.stringify({ success: false, error: "Server configuration error" }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
@@ -50,12 +54,35 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (!callbackData.response) {
-      throw new Error("No response data in callback");
+      console.error("No response data in callback");
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid callback data" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
-    // Decode the base64 response
+    // Verify the checksum from the X-VERIFY header before processing
+    const receivedChecksum = req.headers.get("X-VERIFY");
+    if (!receivedChecksum) {
+      console.error("Missing X-VERIFY header in webhook request");
+      return new Response(
+        JSON.stringify({ success: false, error: "Missing signature" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const isValidSignature = await verifyChecksum(callbackData.response, receivedChecksum, saltKey, saltIndex);
+    if (!isValidSignature) {
+      console.error("Invalid webhook signature - potential forged request");
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid signature" }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Decode the base64 response only after signature verification
     const decodedResponse = JSON.parse(atob(callbackData.response));
-    console.log("PhonePe callback received:", decodedResponse);
+    console.log("PhonePe callback verified and received:", decodedResponse);
 
     const { merchantTransactionId, code, data } = decodedResponse;
     const paymentStatus = code === "PAYMENT_SUCCESS" ? "completed" : "failed";
