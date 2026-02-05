@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.87.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 interface PhonePePaymentRequest {
@@ -30,15 +30,50 @@ const generateChecksum = async (payload: string, saltKey: string, saltIndex: str
 };
 
 const handler = async (req: Request): Promise<Response> => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error("Supabase configuration missing");
+    }
+
+    // Authenticate the user
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      console.error("Missing or invalid Authorization header");
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
+    
+    if (claimsError || !claimsData?.claims) {
+      console.error("Token validation failed:", claimsError);
+      return new Response(
+        JSON.stringify({ success: false, error: "Unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const userId = claimsData.claims.sub;
+    console.log("Authenticated user:", userId);
+
     const merchantId = Deno.env.get("PHONEPE_MERCHANT_ID");
     const saltKey = Deno.env.get("PHONEPE_SALT_KEY");
     const saltIndex = Deno.env.get("PHONEPE_SALT_INDEX") || "1";
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!merchantId || !saltKey) {
@@ -48,13 +83,28 @@ const handler = async (req: Request): Promise<Response> => {
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
     const { amount, merchantTransactionId, merchantUserId, callbackUrl, paymentType, metadata }: PhonePePaymentRequest = await req.json();
 
+    // Validate request data
+    if (!amount || amount <= 0) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid amount" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!merchantTransactionId || !callbackUrl || !paymentType) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Missing required fields" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     // Convert amount to paise (PhonePe uses paise)
     const amountInPaise = Math.round(amount * 100);
 
     const payloadData = {
       merchantId,
       merchantTransactionId,
-      merchantUserId,
+      merchantUserId: merchantUserId || userId,
       amount: amountInPaise,
       redirectUrl: callbackUrl,
       redirectMode: "POST",
@@ -94,6 +144,7 @@ const handler = async (req: Request): Promise<Response> => {
           .eq("id", metadata.donationId);
       }
 
+      console.log("Payment initiated successfully for user:", userId);
       return new Response(
         JSON.stringify({
           success: true,
