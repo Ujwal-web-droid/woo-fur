@@ -7,6 +7,7 @@ import { BookingProvider } from "@/context/BookingContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { OfflineBanner } from "@/components/pwa/OfflineBanner";
 import { UpdatePrompt } from "@/components/pwa/UpdatePrompt";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
@@ -80,6 +81,7 @@ const App = () => (
             <UpdatePrompt />
             <InstallPrompt />
             <BrowserRouter>
+              <ScrollToTop />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
