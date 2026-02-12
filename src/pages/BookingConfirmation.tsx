@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { useBooking } from "@/context/BookingContext";
-import { animals } from "@/data/mockData";
+import { useAnimals } from "@/hooks/useAnimals";
 import { useToast } from "@/hooks/use-toast";
 
 const serviceInfo = {
@@ -31,6 +31,7 @@ const BookingConfirmation = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { bookingData, isBookingComplete, resetBooking } = useBooking();
+  const { data: animals = [] } = useAnimals();
 
   const selectedAnimal = animals.find(a => a.id === bookingData.selectedAnimalId);
   const service = bookingData.serviceType ? serviceInfo[bookingData.serviceType] : null;

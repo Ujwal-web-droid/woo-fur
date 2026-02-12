@@ -12,7 +12,8 @@ import {
   DollarSign, Check, Star, TrendingUp, PawPrint,
   CreditCard, Lock, Loader2
 } from "lucide-react";
-import { animals, programStats, donationImpacts } from "@/data/mockData";
+import { programStats, donationImpacts } from "@/data/mockData";
+import { useAnimals } from "@/hooks/useAnimals";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateDonation, useDonationImpact } from "@/hooks/useDonations";
@@ -69,6 +70,7 @@ const Support = () => {
   const { mutateAsync: createDonation, isPending: isCreatingDonation } = useCreateDonation();
   const { data: donationImpactData } = useDonationImpact();
   const { initiatePayment, isProcessing } = usePayment();
+  const { data: animals = [] } = useAnimals();
   
   const [selectedAmount, setSelectedAmount] = useState<number | null>(100);
   const [customAmount, setCustomAmount] = useState("");

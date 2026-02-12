@@ -14,7 +14,8 @@ import {
   CalendarIcon, Heart, Clock, Users, PawPrint, 
   ChevronRight, ChevronLeft, Check, Sparkles 
 } from "lucide-react";
-import { animals, timeSlots } from "@/data/mockData";
+import { timeSlots } from "@/data/mockData";
+import { useAnimals } from "@/hooks/useAnimals";
 import { useBooking } from "@/context/BookingContext";
 import { useToast } from "@/hooks/use-toast";
 import { usePageContent } from "@/hooks/usePageContent";
@@ -99,6 +100,8 @@ const Booking = () => {
   const { toast } = useToast();
   const { bookingData, updateBookingData, currentStep, setCurrentStep, setIsBookingComplete } = useBooking();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { data: animals = [] } = useAnimals();
 
   const therapyAnimals = animals.filter(
     a => a.status === "Therapy Certified" || a.status === "Part-time Pet"
