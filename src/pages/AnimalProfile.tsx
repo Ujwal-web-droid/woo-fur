@@ -3,9 +3,10 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { animals } from "@/data/mockData";
+import { useAnimal, useAnimals } from "@/hooks/useAnimals";
 import { ImageGallery } from "@/components/shared/ImageGallery";
 import { useFavorites } from "@/hooks/useFavorites";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Heart,
   Calendar,
@@ -31,10 +32,30 @@ import {
 const AnimalProfile = () => {
   const { id } = useParams();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { data: animal, isLoading, error } = useAnimal(id);
+  const { data: allAnimals = [] } = useAnimals();
 
-  const animal = animals.find((a) => a.id === id);
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="section-padding">
+          <div className="container-app">
+            <div className="grid lg:grid-cols-2 gap-8">
+              <Skeleton className="aspect-square w-full rounded-lg" />
+              <div className="space-y-4">
+                <Skeleton className="h-10 w-3/4" />
+                <Skeleton className="h-6 w-1/2" />
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
-  if (!animal) {
+  if (error || !animal) {
     return (
       <Layout>
         <div className="section-padding text-center">
@@ -47,8 +68,8 @@ const AnimalProfile = () => {
     );
   }
 
-  const relatedAnimals = animals
-    .filter((a) => a.id !== animal.id && a.species === animal.species)
+  const relatedAnimals = allAnimals
+    .filter((a) => a.id !== animal.id && a.species.toLowerCase() === animal.species.toLowerCase())
     .slice(0, 3);
 
   const handleShare = (platform: string) => {
@@ -151,19 +172,21 @@ const AnimalProfile = () => {
               </div>
 
               {/* Personality Traits */}
-              <div>
-                <h2 className="font-heading font-semibold text-lg mb-3 flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                  Personality
-                </h2>
-                <div className="flex flex-wrap gap-2">
-                  {animal.personalityTraits.map((trait) => (
-                    <Badge key={trait} variant="outline" className="text-sm">
-                      {trait}
-                    </Badge>
-                  ))}
+              {animal.personalityTraits.length > 0 && (
+                <div>
+                  <h2 className="font-heading font-semibold text-lg mb-3 flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    Personality
+                  </h2>
+                  <div className="flex flex-wrap gap-2">
+                    {animal.personalityTraits.map((trait) => (
+                      <Badge key={trait} variant="outline" className="text-sm">
+                        {trait}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Therapy Certifications */}
               {animal.therapyCertifications.length > 0 && (
@@ -203,14 +226,18 @@ const AnimalProfile = () => {
                   <Stethoscope className="h-5 w-5 text-primary" />
                   Medical History
                 </h3>
-                <ul className="space-y-2">
-                  {animal.medicalHistory.map((item, index) => (
-                    <li key={index} className="flex items-center gap-2 text-sm">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
+                {animal.medicalHistory.length > 0 ? (
+                  <ul className="space-y-2">
+                    {animal.medicalHistory.map((item, index) => (
+                      <li key={index} className="flex items-center gap-2 text-sm">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No medical history recorded</p>
+                )}
               </CardContent>
             </Card>
 
