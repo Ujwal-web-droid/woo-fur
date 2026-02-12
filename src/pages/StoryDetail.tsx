@@ -10,7 +10,8 @@ import {
   ArrowLeft, Heart, Share2, Facebook, Twitter, Linkedin,
   Calendar, User, PawPrint, Send, MessageCircle
 } from "lucide-react";
-import { stories, animals } from "@/data/mockData";
+import { stories } from "@/data/mockData";
+import { useAnimals } from "@/hooks/useAnimals";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,6 +27,7 @@ const StoryDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { data: animals = [] } = useAnimals();
   
   const story = stories.find(s => s.id === id);
   const relatedAnimals = story?.relatedAnimalIds?.map(aid => animals.find(a => a.id === aid)).filter(Boolean) || [];

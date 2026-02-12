@@ -17,7 +17,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { useAuth } from '@/context/AuthContext';
 import { useFavorites } from '@/hooks/useFavorites';
-import { animals } from '@/data/mockData';
+import { useAnimals } from '@/hooks/useAnimals';
 import { 
   User, Mail, Phone, Bell, Heart, 
   Calendar, LogOut, Trash2, Settings
@@ -104,6 +104,7 @@ export default function Profile() {
     navigate('/');
   };
 
+  const { data: animals = [] } = useAnimals();
   const favoriteAnimals = animals.filter(animal => favorites.includes(animal.id));
 
   const getRoleBadgeColor = (role: string) => {
