@@ -119,11 +119,11 @@ const Index = () => {
 
   const featuredStory = getSection<FeaturedStoryContent>('featured_story', {
     badge: "Featured Story",
-    title: "How Luna Changed Sarah's Life Forever",
-    content: "After months of struggling with anxiety, I found peace in Luna's gentle presence. Our weekly therapy sessions became the highlight of my week. Luna somehow always knows exactly what I need—whether it's a quiet companion or playful energy to lift my spirits.",
-    authorName: "Sarah Mitchell",
-    authorRole: "Therapy Client since 2023",
-    sessions: "200+ Sessions"
+    title: "",
+    content: "",
+    authorName: "",
+    authorRole: "",
+    sessions: ""
   });
 
   const cta = getSection<CTAContent>('cta', {
@@ -294,7 +294,8 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Story Section */}
+      {/* Featured Story Section - Only show when content exists */}
+      {featuredStory.title && featuredStory.content && (
       <section className="section-padding bg-gradient-to-br from-sage-light/20 to-amber-light/20">
         <div className="container-app">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -336,16 +337,19 @@ const Index = () => {
                   <PawPrint className="h-24 w-24 text-muted-foreground/30" />
                 )}
               </div>
+              {featuredStory.sessions && (
               <div className="absolute -bottom-4 -right-4 bg-card rounded-xl p-4 shadow-elevated">
                 <div className="flex items-center gap-2">
                   <HandHeart className="h-5 w-5 text-accent" />
                   <span className="font-medium">{featuredStory.sessions}</span>
                 </div>
               </div>
+              )}
             </div>
           </div>
         </div>
       </section>
+      )}
 
       {/* CTA Section */}
       <section className="section-padding bg-primary text-primary-foreground">
