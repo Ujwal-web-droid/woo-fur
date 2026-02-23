@@ -69,6 +69,7 @@ export const useAnimals = () => {
       if (error) throw error;
       return (data as DbAnimal[]).map(transformAnimal);
     },
+    refetchInterval: 60000,
   });
 };
 
@@ -90,6 +91,7 @@ export const useAnimal = (id: string | undefined) => {
       return transformAnimal(data as DbAnimal);
     },
     enabled: !!id,
+    refetchInterval: 60000,
   });
 };
 
@@ -117,6 +119,7 @@ export const useAnimalSearch = (query: string) => {
       return (data as DbAnimal[]).map(transformAnimal);
     },
     enabled: true,
+    refetchInterval: 60000,
   });
 };
 
