@@ -15,6 +15,7 @@ import { Plus, Pencil, Trash2, Eye, EyeOff, Save, FileText, Home, Info, Phone, L
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { ImageUploader } from '@/components/admin/ImageUploader';
+import { ArrayItemEditor } from '@/components/admin/ArrayItemEditor';
 import { useCurrentImages } from '@/hooks/useImageUpload';
 
 interface ContentBlock {
@@ -399,6 +400,63 @@ const IMAGE_SLOTS = [
   { key: 'faq-hero', label: 'FAQ Page Hero', page: 'faq', aspectRatio: '16/9' },
 ];
 
+// Friendly content preview instead of raw JSON
+function ContentPreview({ content, template }: { content: Record<string, any>; template?: { label: string; fields: FieldConfig[] } }) {
+  if (!template) {
+    // Fallback: show key-value pairs
+    const entries = Object.entries(content).filter(([_, v]) => v !== '' && v !== null && v !== undefined);
+    if (entries.length === 0) return <p className="text-xs text-muted-foreground italic">No content</p>;
+    return (
+      <div className="space-y-1">
+        {entries.slice(0, 4).map(([key, value]) => (
+          <div key={key} className="flex gap-2 text-xs">
+            <span className="text-muted-foreground font-medium min-w-[80px]">{key}:</span>
+            <span className="truncate text-foreground">
+              {typeof value === 'string' ? value : Array.isArray(value) ? `${value.length} items` : JSON.stringify(value)}
+            </span>
+          </div>
+        ))}
+        {entries.length > 4 && <p className="text-xs text-muted-foreground">+{entries.length - 4} more fields</p>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1.5">
+      {template.fields.map(field => {
+        const val = content[field.key];
+        if (val === '' || val === null || val === undefined) return null;
+        
+        if (field.type === 'array') {
+          const arr = Array.isArray(val) ? val : [];
+          return (
+            <div key={field.key} className="flex gap-2 text-xs">
+              <span className="text-muted-foreground font-medium min-w-[100px]">{field.label}:</span>
+              <span className="text-foreground">{arr.length} item{arr.length !== 1 ? 's' : ''}</span>
+            </div>
+          );
+        }
+        
+        if (field.type === 'image') {
+          return val ? (
+            <div key={field.key} className="flex gap-2 text-xs items-center">
+              <span className="text-muted-foreground font-medium min-w-[100px]">{field.label}:</span>
+              <span className="text-green-600">✓ Uploaded</span>
+            </div>
+          ) : null;
+        }
+
+        return (
+          <div key={field.key} className="flex gap-2 text-xs">
+            <span className="text-muted-foreground font-medium min-w-[100px]">{field.label}:</span>
+            <span className="truncate text-foreground max-w-[300px]">{String(val)}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function AdminContent() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -494,9 +552,9 @@ export function AdminContent() {
     if (template) {
       template.fields.forEach(field => {
         if (field.type === 'array') {
-          // For array fields, check if the content itself is an array or if it has an items key
+          // Store array data as-is for visual editor
           const arrayContent = block.content[field.key] || block.content.items || block.content;
-          fields[field.key] = JSON.stringify(Array.isArray(arrayContent) ? arrayContent : block.content, null, 2);
+          fields[field.key] = JSON.stringify(Array.isArray(arrayContent) ? arrayContent : [], null, 2);
         } else if (field.type === 'image') {
           fields[field.key] = block.content[field.key] || '';
         } else {
@@ -617,6 +675,20 @@ export function AdminContent() {
             aspectRatio={field.aspectRatio || '16/9'}
             onImageChange={(url) => handleImageFieldChange(field.key, url)}
           />
+        ) : field.type === 'array' ? (
+          <ArrayItemEditor
+            label={field.label}
+            value={(() => {
+              try {
+                return JSON.parse(formFields[field.key] || '[]');
+              } catch {
+                return [];
+              }
+            })()}
+            onChange={(newValue) => {
+              setFormFields({ ...formFields, [field.key]: JSON.stringify(newValue, null, 2) });
+            }}
+          />
         ) : (
           <>
             <Label htmlFor={field.key}>{field.label}</Label>
@@ -627,15 +699,6 @@ export function AdminContent() {
                 onChange={(e) => setFormFields({ ...formFields, [field.key]: e.target.value })}
                 rows={4}
                 placeholder={`Enter ${field.label.toLowerCase()}...`}
-              />
-            ) : field.type === 'array' ? (
-              <Textarea
-                id={field.key}
-                value={formFields[field.key] || '[]'}
-                onChange={(e) => setFormFields({ ...formFields, [field.key]: e.target.value })}
-                rows={8}
-                className="font-mono text-sm"
-                placeholder='[{"key": "value"}]'
               />
             ) : (
               <Input
@@ -827,8 +890,8 @@ export function AdminContent() {
                               <span className="text-xs bg-muted px-2 py-1 rounded">Hidden</span>
                             )}
                           </CardTitle>
-                          <CardDescription>
-                            Section: {block.section_key} • Updated: {new Date(block.updated_at).toLocaleDateString()}
+                          <CardDescription className="text-xs">
+                            Last updated: {new Date(block.updated_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
@@ -861,9 +924,7 @@ export function AdminContent() {
                       </div>
                     </CardHeader>
                     <CardContent className="pt-0">
-                      <pre className="text-xs bg-muted p-3 rounded-md overflow-x-auto max-h-32">
-                        {JSON.stringify(block.content, null, 2)}
-                      </pre>
+                      <ContentPreview content={block.content} template={template} />
                     </CardContent>
                   </Card>
                 );
